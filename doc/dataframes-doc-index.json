@@ -3,6 +3,80 @@
   "package": "dataframes",
   "source": "./doc/dataframes.md",
   "symbols": {
+    "df_arrange": {
+      "type": "Function",
+      "signature": "df_arrange(T, col_name) / df_arrange (T, col_name, descending)",
+      "summary": "Sort rows by a column. Ascending by default; pass descending for reverse order. Works with both numeric and string columns.",
+      "body_md": "Sort rows by a column. Ascending by default; pass `descending` for reverse order. Works with both numeric and string columns.\n\n#### Examples\n\n```maxima\n(%i1) T2 : df_arrange(T, \"price\")$\n(%i2) np_to_list(df_table_column(T2, \"price\"));\n(%o2)                  [10.0, 20.0, 30.0]\n(%i3) df_arrange(T, \"price\", descending)$\n```\n\nSee also: `df_filter`, `df_select`",
+      "examples": [
+        {
+          "input": "T2 : df_arrange(T, \"price\")$",
+          "output": ""
+        },
+        {
+          "input": "np_to_list(df_table_column(T2, \"price\"));",
+          "output": "[10.0, 20.0, 30.0]"
+        },
+        {
+          "input": "df_arrange(T, \"price\", descending)$",
+          "output": ""
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_select"
+      ],
+      "section": "Table Manipulation"
+    },
+    "df_bind_cols": {
+      "type": "Function",
+      "signature": "df_bind_cols(T1, T2)",
+      "summary": "Stack two tables horizontally. Row counts must match and column names must not overlap.",
+      "body_md": "Stack two tables horizontally. Row counts must match and column names must not overlap.\n\n#### Examples\n\n```maxima\n(%i1) X : df_table([\"x\"], [ndarray([1.0, 2.0])])$\n(%i2) Y : df_table([\"y\"], [ndarray([3.0, 4.0])])$\n(%i3) df_table_names(df_bind_cols(X, Y));\n(%o3)                        [x, y]\n```\n\nSee also: `df_bind_rows`, `df_inner_join`",
+      "examples": [
+        {
+          "input": "X : df_table([\"x\"], [ndarray([1.0, 2.0])])$",
+          "output": ""
+        },
+        {
+          "input": "Y : df_table([\"y\"], [ndarray([3.0, 4.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(df_bind_cols(X, Y));",
+          "output": "[x, y]"
+        }
+      ],
+      "see_also": [
+        "df_bind_rows",
+        "df_inner_join"
+      ],
+      "section": "Joins and Binds"
+    },
+    "df_bind_rows": {
+      "type": "Function",
+      "signature": "df_bind_rows(T1, T2)",
+      "summary": "Stack two tables vertically. Column names must match exactly.",
+      "body_md": "Stack two tables vertically. Column names must match exactly.\n\n#### Examples\n\n```maxima\n(%i1) A : df_table([\"x\"], [ndarray([1.0, 2.0])])$\n(%i2) B : df_table([\"x\"], [ndarray([3.0, 4.0])])$\n(%i3) df_table_shape(df_bind_rows(A, B));\n(%o3)                        [4, 1]\n```\n\nSee also: `df_bind_cols`",
+      "examples": [
+        {
+          "input": "A : df_table([\"x\"], [ndarray([1.0, 2.0])])$",
+          "output": ""
+        },
+        {
+          "input": "B : df_table([\"x\"], [ndarray([3.0, 4.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(df_bind_rows(A, B));",
+          "output": "[4, 1]"
+        }
+      ],
+      "see_also": [
+        "df_bind_cols"
+      ],
+      "section": "Joins and Binds"
+    },
     "df_count": {
       "type": "Function",
       "signature": "df_count(col)",
@@ -58,6 +132,118 @@
       ],
       "section": "Column Aggregation and Describe"
     },
+    "df_distinct": {
+      "type": "Function",
+      "signature": "df_distinct(T) / df_distinct (T, cols)",
+      "summary": "Return unique rows. Optionally specify which columns to consider for uniqueness.",
+      "body_md": "Return unique rows. Optionally specify which columns to consider for uniqueness.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"x\"], [df_string_column([\"a\",\"b\",\"a\",\"c\"])])$\n(%i2) df_table_shape(df_distinct(T));\n(%o2)                        [3, 1]\n```\n\nSee also: `df_filter`, `df_nunique`",
+      "examples": [
+        {
+          "input": "T : df_table([\"x\"], [df_string_column([\"a\",\"b\",\"a\",\"c\"])])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(df_distinct(T));",
+          "output": "[3, 1]"
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_nunique"
+      ],
+      "section": "Table Manipulation"
+    },
+    "df_filter": {
+      "type": "Function",
+      "signature": "df_filter(T, pred)",
+      "summary": "Subset rows where pred returns true. The lambda's parameter names are matched to table column names.",
+      "body_md": "Subset rows where `pred` returns true. The lambda's parameter names are matched to table column names.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"name\", \"price\"],\n                    [df_string_column([\"A\",\"B\",\"C\"]), ndarray([10.0, 30.0, 20.0])])$\n(%i2) df_filter(T, lambda([price], is(price > 15)));\n(%o2)              df_table: 2 rows x 2 cols\n(%i3) df_filter(T, lambda([name, price], is(price > 15) and name # \"C\"));\n(%o3)              df_table: 1 rows x 2 cols\n```\n\nSee also: `df_select`, `df_slice`",
+      "examples": [
+        {
+          "input": "T : df_table([\"name\", \"price\"],\n                    [df_string_column([\"A\",\"B\",\"C\"]), ndarray([10.0, 30.0, 20.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_filter(T, lambda([price], is(price > 15)));",
+          "output": "df_table: 2 rows x 2 cols"
+        },
+        {
+          "input": "df_filter(T, lambda([name, price], is(price > 15) and name # \"C\"));",
+          "output": "df_table: 1 rows x 2 cols"
+        }
+      ],
+      "see_also": [
+        "df_select",
+        "df_slice"
+      ],
+      "section": "Table Manipulation"
+    },
+    "df_group_by": {
+      "type": "Function",
+      "signature": "df_group_by(T, col_name)",
+      "summary": "Group a table by a column, returning a grouped table. The grouped table can then be passed to df_summarize to compute per-group statistics.",
+      "body_md": "Group a table by a column, returning a grouped table. The grouped table can then be passed to `df_summarize` to compute per-group statistics.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\",\"N\",\"S\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0])])$\n(%i2) G : df_group_by(T, \"region\")$\n(%i3) df_summarize(G, \"total\", lambda([revenue], np_sum(revenue)));\n(%o3)              df_table: 2 rows x 2 cols\n```\n\nThe result table has the group-key column plus one column per summary function.\n\nSee also: `df_summarize`, `df_describe`",
+      "examples": [
+        {
+          "input": "T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\",\"N\",\"S\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0])])$",
+          "output": ""
+        },
+        {
+          "input": "G : df_group_by(T, \"region\")$",
+          "output": ""
+        },
+        {
+          "input": "df_summarize(G, \"total\", lambda([revenue], np_sum(revenue)));",
+          "output": "df_table: 2 rows x 2 cols"
+        }
+      ],
+      "see_also": [
+        "df_summarize",
+        "df_describe"
+      ],
+      "section": "Grouped Tables"
+    },
+    "df_inner_join": {
+      "type": "Function",
+      "signature": "df_inner_join(T1, T2, key)",
+      "summary": "Join two tables on a key column, keeping only rows with matching keys in both tables.",
+      "body_md": "Join two tables on a key column, keeping only rows with matching keys in both tables.\n\n#### Examples\n\n```maxima\n(%i1) T1 : df_table([\"id\", \"name\"],\n                     [df_string_column([\"1\",\"2\",\"3\"]),\n                      df_string_column([\"Alice\",\"Bob\",\"Charlie\"])])$\n(%i2) T2 : df_table([\"id\", \"score\"],\n                     [df_string_column([\"1\",\"2\"]),\n                      ndarray([90.0, 80.0])])$\n(%i3) df_inner_join(T1, T2, \"id\");\n(%o3)              df_table: 2 rows x 3 cols\n```\n\nSee also: `df_left_join`, `df_bind_cols`",
+      "examples": [
+        {
+          "input": "T1 : df_table([\"id\", \"name\"],\n                     [df_string_column([\"1\",\"2\",\"3\"]),\n                      df_string_column([\"Alice\",\"Bob\",\"Charlie\"])])$",
+          "output": ""
+        },
+        {
+          "input": "T2 : df_table([\"id\", \"score\"],\n                     [df_string_column([\"1\",\"2\"]),\n                      ndarray([90.0, 80.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_inner_join(T1, T2, \"id\");",
+          "output": "df_table: 2 rows x 3 cols"
+        }
+      ],
+      "see_also": [
+        "df_left_join",
+        "df_bind_cols"
+      ],
+      "section": "Joins and Binds"
+    },
+    "df_left_join": {
+      "type": "Function",
+      "signature": "df_left_join(T1, T2, key)",
+      "summary": "Join two tables on a key column, keeping all rows from the left table. Unmatched right columns are filled with 0 (numeric) or \"\" (string).",
+      "body_md": "Join two tables on a key column, keeping all rows from the left table. Unmatched right columns are filled with 0 (numeric) or \"\" (string).\n\n#### Examples\n\n```maxima\n(%i1) df_left_join(T1, T2, \"id\");\n(%o1)              df_table: 3 rows x 3 cols\n```\n\nSee also: `df_inner_join`",
+      "examples": [
+        {
+          "input": "df_left_join(T1, T2, \"id\");",
+          "output": "df_table: 3 rows x 3 cols"
+        }
+      ],
+      "see_also": [
+        "df_inner_join"
+      ],
+      "section": "Joins and Binds"
+    },
     "df_median": {
       "type": "Function",
       "signature": "df_median(col)",
@@ -78,6 +264,31 @@
         "df_describe"
       ],
       "section": "Column Aggregation and Describe"
+    },
+    "df_mutate": {
+      "type": "Function",
+      "signature": "df_mutate(T, col_name, pred)",
+      "summary": "Add or replace a column by applying a lambda row-wise. Lambda parameter names are matched to column names. If the column name already exists, it is replaced.",
+      "body_md": "Add or replace a column by applying a lambda row-wise. Lambda parameter names are matched to column names. If the column name already exists, it is replaced.\n\n#### Examples\n\n```maxima\n(%i1) T2 : df_mutate(T, \"double\", lambda([price], 2 * price))$\n(%i2) df_table_names(T2);\n(%o2)              [name, price, double]\n(%i3) np_to_list(df_table_column(T2, \"double\"));\n(%o3)                  [20.0, 60.0, 40.0]\n```\n\nSee also: `df_filter`, `df_summarize`",
+      "examples": [
+        {
+          "input": "T2 : df_mutate(T, \"double\", lambda([price], 2 * price))$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(T2);",
+          "output": "[name, price, double]"
+        },
+        {
+          "input": "np_to_list(df_table_column(T2, \"double\"));",
+          "output": "[20.0, 60.0, 40.0]"
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_summarize"
+      ],
+      "section": "Table Manipulation"
     },
     "df_ndarray_to_table": {
       "type": "Function",
@@ -161,6 +372,68 @@
         "df_describe"
       ],
       "section": "Column Aggregation and Describe"
+    },
+    "df_rename": {
+      "type": "Function",
+      "signature": "df_rename(T, old_name, new_name)",
+      "summary": "Rename a column.",
+      "body_md": "Rename a column.\n\n#### Examples\n\n```maxima\n(%i1) T2 : df_rename(T, \"price\", \"cost\")$\n(%i2) df_table_names(T2);\n(%o2)                     [name, cost]\n```\n\nSee also: `df_select`",
+      "examples": [
+        {
+          "input": "T2 : df_rename(T, \"price\", \"cost\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(T2);",
+          "output": "[name, cost]"
+        }
+      ],
+      "see_also": [
+        "df_select"
+      ],
+      "section": "Table Manipulation"
+    },
+    "df_select": {
+      "type": "Function",
+      "signature": "df_select(T, names)",
+      "summary": "Subset and/or reorder columns by name.",
+      "body_md": "Subset and/or reorder columns by name.\n\n#### Examples\n\n```maxima\n(%i1) df_select(T, [\"price\"]);\n(%o1)              df_table: 3 rows x 1 cols\n(%i2) df_table_names(df_select(T, [\"price\", \"name\"]));\n(%o2)                   [price, name]\n```\n\nSee also: `df_filter`, `df_rename`",
+      "examples": [
+        {
+          "input": "df_select(T, [\"price\"]);",
+          "output": "df_table: 3 rows x 1 cols"
+        },
+        {
+          "input": "df_table_names(df_select(T, [\"price\", \"name\"]));",
+          "output": "[price, name]"
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_rename"
+      ],
+      "section": "Table Manipulation"
+    },
+    "df_slice": {
+      "type": "Function",
+      "signature": "df_slice(T, indices)",
+      "summary": "Subset rows by position (1-indexed).",
+      "body_md": "Subset rows by position (1-indexed).\n\n#### Examples\n\n```maxima\n(%i1) T2 : df_slice(T, [1, 3])$\n(%i2) df_table_shape(T2);\n(%o2)                        [2, 2]\n```\n\nSee also: `df_filter`, `df_table_head`",
+      "examples": [
+        {
+          "input": "T2 : df_slice(T, [1, 3])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T2);",
+          "output": "[2, 2]"
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_table_head"
+      ],
+      "section": "Table Manipulation"
     },
     "df_string_column": {
       "type": "Function",
@@ -256,6 +529,24 @@
         "df_to_string_list"
       ],
       "section": "String Columns"
+    },
+    "df_summarize": {
+      "type": "Function",
+      "signature": "df_summarize(T, name1, fn1, name2, fn2, ...)",
+      "summary": "Reduce a table to a single-row summary. Takes alternating name/lambda pairs. Each lambda receives whole columns (as ndarray or string-column handles) and must return a scalar.",
+      "body_md": "Reduce a table to a single-row summary. Takes alternating name/lambda pairs. Each lambda receives whole columns (as ndarray or string-column handles) and must return a scalar.\n\nAlso works with grouped tables from `df_group_by`, producing one row per group.\n\n#### Examples\n\n```maxima\n(%i1) df_summarize(T, \"avg\", lambda([price], np_mean(price)),\n                      \"n\",   lambda([price], df_count(price)));\n(%o1)              df_table: 1 rows x 2 cols\n```\n\nSee also: `df_mutate`, `df_group_by`, `df_describe`",
+      "examples": [
+        {
+          "input": "df_summarize(T, \"avg\", lambda([price], np_mean(price)),\n                      \"n\",   lambda([price], df_count(price)));",
+          "output": "df_table: 1 rows x 2 cols"
+        }
+      ],
+      "see_also": [
+        "df_mutate",
+        "df_group_by",
+        "df_describe"
+      ],
+      "section": "Table Manipulation"
     },
     "df_table": {
       "type": "Function",
@@ -588,6 +879,18 @@
         {
           "title": "Column Aggregation and Describe",
           "body_md": "Column-level aggregation functions and `df_describe` for summary statistics. These functions work on individual columns (ndarray or string-column) and return scalars or new structures."
+        },
+        {
+          "title": "Table Manipulation",
+          "body_md": "dplyr-style verbs for filtering, selecting, sorting, transforming, and summarizing tables. Functions that accept predicates use Maxima lambda expressions where parameter names are automatically matched to column names."
+        },
+        {
+          "title": "Grouped Tables",
+          "body_md": "Group a table by a column for per-group aggregation with `df_summarize`."
+        },
+        {
+          "title": "Joins and Binds",
+          "body_md": "Combine tables by key columns (joins) or by stacking (binds)."
         }
       ]
     }

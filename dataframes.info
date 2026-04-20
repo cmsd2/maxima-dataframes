@@ -162,6 +162,19 @@ String-columns use *1-based indexing* (matching Maxima convention).
 * Function df_nunique col::
 * Function df_value_counts col::
 * Function df_describe T::
+* Function df_filter T pred::
+* Function df_select T names::
+* Function df_arrange T col_name / df_arrange T col_name descending::
+* Function df_slice T indices::
+* Function df_rename T old_name new_name::
+* Function df_mutate T col_name pred::
+* Function df_summarize T name1 fn1 name2 fn2 ...::
+* Function df_distinct T / df_distinct T cols::
+* Function df_group_by T col_name::
+* Function df_inner_join T1 T2 key::
+* Function df_left_join T1 T2 key::
+* Function df_bind_rows T1 T2::
+* Function df_bind_cols T1 T2::
 
 
 File: dataframes.info,  Node: Function df_string_column list,  Next: Function df_to_string_list col,  Up: String Columns
@@ -628,7 +641,7 @@ File: dataframes.info,  Node: Function df_value_counts col,  Next: Function df_d
 See also: ‘df_nunique’, ‘df_unique’
 
 
-File: dataframes.info,  Node: Function df_describe T,  Prev: Function df_value_counts col,  Up: String Columns
+File: dataframes.info,  Node: Function df_describe T,  Next: Function df_filter T pred,  Prev: Function df_value_counts col,  Up: String Columns
 
  -- Function: df_describe (T)
      Summary statistics for the numeric columns of a table.  Returns a
@@ -654,7 +667,299 @@ File: dataframes.info,  Node: Function df_describe T,  Prev: Function df_value_c
 (%i5) df_table_names(df_describe(T));
 (%o5)                    [stat, price]
 
-See also: ‘df_median’, ‘df_quantile’, ‘df_count’
+See also: ‘df_median’, ‘df_quantile’, ‘df_count’ ## Table Manipulation
+
+dplyr-style verbs for filtering, selecting, sorting, transforming, and
+summarizing tables.  Functions that accept predicates use Maxima lambda
+expressions where parameter names are automatically matched to column
+names.
+
+
+File: dataframes.info,  Node: Function df_filter T pred,  Next: Function df_select T names,  Prev: Function df_describe T,  Up: String Columns
+
+ -- Function: df_filter (T, PRED)
+     Subset rows where ‘pred’ returns true.  The lambda's parameter
+     names are matched to table column names.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.20 Examples
+.................
+
+(%i1) T : df_table(["name", "price"],
+                    [df_string_column(["A","B","C"]), ndarray([10.0, 30.0, 20.0])])$
+(%i2) df_filter(T, lambda([price], is(price > 15)));
+(%o2)              df_table: 2 rows x 2 cols
+(%i3) df_filter(T, lambda([name, price], is(price > 15) and name # "C"));
+(%o3)              df_table: 1 rows x 2 cols
+
+See also: ‘df_select’, ‘df_slice’
+
+
+File: dataframes.info,  Node: Function df_select T names,  Next: Function df_arrange T col_name / df_arrange T col_name descending,  Prev: Function df_filter T pred,  Up: String Columns
+
+ -- Function: df_select (T, NAMES)
+     Subset and/or reorder columns by name.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.21 Examples
+.................
+
+(%i1) df_select(T, ["price"]);
+(%o1)              df_table: 3 rows x 1 cols
+(%i2) df_table_names(df_select(T, ["price", "name"]));
+(%o2)                   [price, name]
+
+See also: ‘df_filter’, ‘df_rename’
+
+
+File: dataframes.info,  Node: Function df_arrange T col_name / df_arrange T col_name descending,  Next: Function df_slice T indices,  Prev: Function df_select T names,  Up: String Columns
+
+ -- Function: df_arrange (T, COL_NAME) / DF_ARRANGE (T, COL_NAME,
+          DESCENDING)
+     Sort rows by a column.  Ascending by default; pass ‘descending’ for
+     reverse order.  Works with both numeric and string columns.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.22 Examples
+.................
+
+(%i1) T2 : df_arrange(T, "price")$
+(%i2) np_to_list(df_table_column(T2, "price"));
+(%o2)                  [10.0, 20.0, 30.0]
+(%i3) df_arrange(T, "price", descending)$
+
+See also: ‘df_filter’, ‘df_select’
+
+
+File: dataframes.info,  Node: Function df_slice T indices,  Next: Function df_rename T old_name new_name,  Prev: Function df_arrange T col_name / df_arrange T col_name descending,  Up: String Columns
+
+ -- Function: df_slice (T, INDICES)
+     Subset rows by position (1-indexed).
+
+* Menu:
+
+     * Examples::
+
+1.3.1.23 Examples
+.................
+
+(%i1) T2 : df_slice(T, [1, 3])$
+(%i2) df_table_shape(T2);
+(%o2)                        [2, 2]
+
+See also: ‘df_filter’, ‘df_table_head’
+
+
+File: dataframes.info,  Node: Function df_rename T old_name new_name,  Next: Function df_mutate T col_name pred,  Prev: Function df_slice T indices,  Up: String Columns
+
+ -- Function: df_rename (T, OLD_NAME, NEW_NAME)
+     Rename a column.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.24 Examples
+.................
+
+(%i1) T2 : df_rename(T, "price", "cost")$
+(%i2) df_table_names(T2);
+(%o2)                     [name, cost]
+
+See also: ‘df_select’
+
+
+File: dataframes.info,  Node: Function df_mutate T col_name pred,  Next: Function df_summarize T name1 fn1 name2 fn2 ...,  Prev: Function df_rename T old_name new_name,  Up: String Columns
+
+ -- Function: df_mutate (T, COL_NAME, PRED)
+     Add or replace a column by applying a lambda row-wise.  Lambda
+     parameter names are matched to column names.  If the column name
+     already exists, it is replaced.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.25 Examples
+.................
+
+(%i1) T2 : df_mutate(T, "double", lambda([price], 2 * price))$
+(%i2) df_table_names(T2);
+(%o2)              [name, price, double]
+(%i3) np_to_list(df_table_column(T2, "double"));
+(%o3)                  [20.0, 60.0, 40.0]
+
+See also: ‘df_filter’, ‘df_summarize’
+
+
+File: dataframes.info,  Node: Function df_summarize T name1 fn1 name2 fn2 ...,  Next: Function df_distinct T / df_distinct T cols,  Prev: Function df_mutate T col_name pred,  Up: String Columns
+
+ -- Function: df_summarize (T, NAME1, FN1, NAME2, FN2, ...)
+     Reduce a table to a single-row summary.  Takes alternating
+     name/lambda pairs.  Each lambda receives whole columns (as ndarray
+     or string-column handles) and must return a scalar.
+
+     Also works with grouped tables from ‘df_group_by’, producing one
+     row per group.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.26 Examples
+.................
+
+(%i1) df_summarize(T, "avg", lambda([price], np_mean(price)),
+                      "n",   lambda([price], df_count(price)));
+(%o1)              df_table: 1 rows x 2 cols
+
+See also: ‘df_mutate’, ‘df_group_by’, ‘df_describe’
+
+
+File: dataframes.info,  Node: Function df_distinct T / df_distinct T cols,  Next: Function df_group_by T col_name,  Prev: Function df_summarize T name1 fn1 name2 fn2 ...,  Up: String Columns
+
+ -- Function: df_distinct (T) / DF_DISTINCT (T, COLS)
+     Return unique rows.  Optionally specify which columns to consider
+     for uniqueness.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.27 Examples
+.................
+
+(%i1) T : df_table(["x"], [df_string_column(["a","b","a","c"])])$
+(%i2) df_table_shape(df_distinct(T));
+(%o2)                        [3, 1]
+
+See also: ‘df_filter’, ‘df_nunique’ ## Grouped Tables
+
+Group a table by a column for per-group aggregation with ‘df_summarize’.
+
+
+File: dataframes.info,  Node: Function df_group_by T col_name,  Next: Function df_inner_join T1 T2 key,  Prev: Function df_distinct T / df_distinct T cols,  Up: String Columns
+
+ -- Function: df_group_by (T, COL_NAME)
+     Group a table by a column, returning a grouped table.  The grouped
+     table can then be passed to ‘df_summarize’ to compute per-group
+     statistics.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.28 Examples
+.................
+
+(%i1) T : df_table(["region", "revenue"],
+                    [df_string_column(["N","S","N","S"]),
+                     ndarray([10.0, 20.0, 30.0, 40.0])])$
+(%i2) G : df_group_by(T, "region")$
+(%i3) df_summarize(G, "total", lambda([revenue], np_sum(revenue)));
+(%o3)              df_table: 2 rows x 2 cols
+
+The result table has the group-key column plus one column per summary
+function.
+
+See also: ‘df_summarize’, ‘df_describe’ ## Joins and Binds
+
+Combine tables by key columns (joins) or by stacking (binds).
+
+
+File: dataframes.info,  Node: Function df_inner_join T1 T2 key,  Next: Function df_left_join T1 T2 key,  Prev: Function df_group_by T col_name,  Up: String Columns
+
+ -- Function: df_inner_join (T1, T2, KEY)
+     Join two tables on a key column, keeping only rows with matching
+     keys in both tables.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.29 Examples
+.................
+
+(%i1) T1 : df_table(["id", "name"],
+                     [df_string_column(["1","2","3"]),
+                      df_string_column(["Alice","Bob","Charlie"])])$
+(%i2) T2 : df_table(["id", "score"],
+                     [df_string_column(["1","2"]),
+                      ndarray([90.0, 80.0])])$
+(%i3) df_inner_join(T1, T2, "id");
+(%o3)              df_table: 2 rows x 3 cols
+
+See also: ‘df_left_join’, ‘df_bind_cols’
+
+
+File: dataframes.info,  Node: Function df_left_join T1 T2 key,  Next: Function df_bind_rows T1 T2,  Prev: Function df_inner_join T1 T2 key,  Up: String Columns
+
+ -- Function: df_left_join (T1, T2, KEY)
+     Join two tables on a key column, keeping all rows from the left
+     table.  Unmatched right columns are filled with 0 (numeric) or “”
+     (string).
+
+* Menu:
+
+     * Examples::
+
+1.3.1.30 Examples
+.................
+
+(%i1) df_left_join(T1, T2, "id");
+(%o1)              df_table: 3 rows x 3 cols
+
+See also: ‘df_inner_join’
+
+
+File: dataframes.info,  Node: Function df_bind_rows T1 T2,  Next: Function df_bind_cols T1 T2,  Prev: Function df_left_join T1 T2 key,  Up: String Columns
+
+ -- Function: df_bind_rows (T1, T2)
+     Stack two tables vertically.  Column names must match exactly.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.31 Examples
+.................
+
+(%i1) A : df_table(["x"], [ndarray([1.0, 2.0])])$
+(%i2) B : df_table(["x"], [ndarray([3.0, 4.0])])$
+(%i3) df_table_shape(df_bind_rows(A, B));
+(%o3)                        [4, 1]
+
+See also: ‘df_bind_cols’
+
+
+File: dataframes.info,  Node: Function df_bind_cols T1 T2,  Prev: Function df_bind_rows T1 T2,  Up: String Columns
+
+ -- Function: df_bind_cols (T1, T2)
+     Stack two tables horizontally.  Row counts must match and column
+     names must not overlap.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.32 Examples
+.................
+
+(%i1) X : df_table(["x"], [ndarray([1.0, 2.0])])$
+(%i2) Y : df_table(["y"], [ndarray([3.0, 4.0])])$
+(%i3) df_table_names(df_bind_cols(X, Y));
+(%o3)                        [x, y]
+
+See also: ‘df_bind_rows’, ‘df_inner_join’
 
 
 File: dataframes.info,  Node: Function and variable index,  Prev: Package dataframes,  Up: Top
@@ -665,16 +970,40 @@ Appendix A Function and variable index
  [index ]
 * Menu:
 
+* df_arrange:                            Function df_arrange T col_name / df_arrange T col_name descending.
+                                                                (line 3)
+* df_bind_cols:                          Function df_bind_cols T1 T2.
+                                                                (line 3)
+* df_bind_rows:                          Function df_bind_rows T1 T2.
+                                                                (line 3)
 * df_count:                              Function df_count col. (line 3)
 * df_describe:                           Function df_describe T.
                                                                 (line 3)
+* df_distinct:                           Function df_distinct T / df_distinct T cols.
+                                                                (line 3)
+* df_filter:                             Function df_filter T pred.
+                                                                (line 3)
+* df_group_by:                           Function df_group_by T col_name.
+                                                                (line 3)
+* df_inner_join:                         Function df_inner_join T1 T2 key.
+                                                                (line 3)
+* df_left_join:                          Function df_left_join T1 T2 key.
+                                                                (line 3)
 * df_median:                             Function df_median col.
+                                                                (line 3)
+* df_mutate:                             Function df_mutate T col_name pred.
                                                                 (line 3)
 * df_ndarray_to_table:                   Function df_ndarray_to_table A names.
                                                                 (line 3)
 * df_nunique:                            Function df_nunique col.
                                                                 (line 3)
 * df_quantile:                           Function df_quantile col p.
+                                                                (line 3)
+* df_rename:                             Function df_rename T old_name new_name.
+                                                                (line 3)
+* df_select:                             Function df_select T names.
+                                                                (line 3)
+* df_slice:                              Function df_slice T indices.
                                                                 (line 3)
 * df_string_column:                      Function df_string_column list.
                                                                 (line 3)
@@ -683,6 +1012,8 @@ Appendix A Function and variable index
 * df_string_column_p:                    Function df_string_column_p x.
                                                                 (line 3)
 * df_string_column_ref:                  Function df_string_column_ref col i.
+                                                                (line 3)
+* df_summarize:                          Function df_summarize T name1 fn1 name2 fn2 ....
                                                                 (line 3)
 * df_table:                              Function df_table names columns.
                                                                 (line 3)
@@ -726,68 +1057,107 @@ Node: Definitions for dataframes3761
 Ref: #definitions-for-dataframes3967
 Node: String Columns3967
 Ref: #string-columns-14114
-Node: Function df_string_column list5041
-Ref: #function-df_string_column-list5203
-Node: Examples5354
-Ref: #examples5448
-Node: Function df_to_string_list col5771
-Ref: #function-df_to_string_list-col5971
-Ref: #examples-16098
-Node: Function df_string_column_p x6293
-Ref: #function-df_string_column_p-x6497
-Ref: #examples-26661
-Node: Function df_string_column_ref col i6933
-Ref: #function-df_string_column_ref-col-i7150
-Ref: #examples-37326
-Node: Function df_string_column_length col7642
-Ref: #function-df_string_column_length-col7861
-Ref: #examples-47980
-Node: Function df_table names columns8426
-Ref: #function-df_table-names-columns8637
-Ref: #examples-58957
-Node: Function df_table_column T name9468
-Ref: #function-df_table_column-t-name9668
-Ref: #examples-69914
-Node: Function df_table_shape T10357
-Ref: #function-df_table_shape-t10544
-Ref: #examples-710666
-Node: Function df_table_names T10888
-Ref: #function-df_table_names-t11088
-Ref: #examples-811221
-Node: Function df_table_head T / df_table_head T n11450
-Ref: #function-df_table_head-t-df_table_head-t-n11677
-Ref: #examples-911903
-Node: Function df_table_to_ndarray T12298
-Ref: #function-df_table_to_ndarray-t12519
-Ref: #examples-1012795
-Node: Function df_ndarray_to_table A names13109
-Ref: #function-df_ndarray_to_table-a-names13314
-Ref: #examples-1113597
-Node: Function df_table_p x13928
-Ref: #function-df_table_p-x14108
-Ref: #examples-1214266
-Node: Function df_count col14721
-Ref: #function-df_count-col14887
-Ref: #examples-1315047
-Node: Function df_median col15249
-Ref: #function-df_median-col15421
-Ref: #examples-1415592
-Node: Function df_quantile col p15800
-Ref: #function-df_quantile-col-p15978
-Ref: #examples-1516153
-Node: Function df_unique col16448
-Ref: #function-df_unique-col16622
-Ref: #examples-1616805
-Node: Function df_nunique col16990
-Ref: #function-df_nunique-col17167
-Ref: #examples-1717321
-Node: Function df_value_counts col17545
-Ref: #function-df_value_counts-col17727
-Ref: #examples-1817980
-Node: Function df_describe T18364
-Ref: #function-df_describe-t18508
-Ref: #examples-1918927
-Node: Function and variable index19305
+Node: Function df_string_column list5559
+Ref: #function-df_string_column-list5721
+Node: Examples5872
+Ref: #examples5966
+Node: Function df_to_string_list col6289
+Ref: #function-df_to_string_list-col6489
+Ref: #examples-16616
+Node: Function df_string_column_p x6811
+Ref: #function-df_string_column_p-x7015
+Ref: #examples-27179
+Node: Function df_string_column_ref col i7451
+Ref: #function-df_string_column_ref-col-i7668
+Ref: #examples-37844
+Node: Function df_string_column_length col8160
+Ref: #function-df_string_column_length-col8379
+Ref: #examples-48498
+Node: Function df_table names columns8944
+Ref: #function-df_table-names-columns9155
+Ref: #examples-59475
+Node: Function df_table_column T name9986
+Ref: #function-df_table_column-t-name10186
+Ref: #examples-610432
+Node: Function df_table_shape T10875
+Ref: #function-df_table_shape-t11062
+Ref: #examples-711184
+Node: Function df_table_names T11406
+Ref: #function-df_table_names-t11606
+Ref: #examples-811739
+Node: Function df_table_head T / df_table_head T n11968
+Ref: #function-df_table_head-t-df_table_head-t-n12195
+Ref: #examples-912421
+Node: Function df_table_to_ndarray T12816
+Ref: #function-df_table_to_ndarray-t13037
+Ref: #examples-1013313
+Node: Function df_ndarray_to_table A names13627
+Ref: #function-df_ndarray_to_table-a-names13832
+Ref: #examples-1114115
+Node: Function df_table_p x14446
+Ref: #function-df_table_p-x14626
+Ref: #examples-1214784
+Node: Function df_count col15239
+Ref: #function-df_count-col15405
+Ref: #examples-1315565
+Node: Function df_median col15767
+Ref: #function-df_median-col15939
+Ref: #examples-1416110
+Node: Function df_quantile col p16318
+Ref: #function-df_quantile-col-p16496
+Ref: #examples-1516671
+Node: Function df_unique col16966
+Ref: #function-df_unique-col17140
+Ref: #examples-1617323
+Node: Function df_nunique col17508
+Ref: #function-df_nunique-col17685
+Ref: #examples-1717839
+Node: Function df_value_counts col18063
+Ref: #function-df_value_counts-col18245
+Ref: #examples-1818498
+Node: Function df_describe T18882
+Ref: #function-df_describe-t19060
+Ref: #examples-1919479
+Node: Function df_filter T pred20100
+Ref: #function-df_filter-t-pred20280
+Ref: #examples-2020464
+Node: Function df_select T names20848
+Ref: #function-df_select-t-names21072
+Ref: #examples-2121182
+Node: Function df_arrange T col_name / df_arrange T col_name descending21396
+Ref: #function-df_arrange-t-col_name-df_arrange-t-col_name-descending21675
+Ref: #examples-2221883
+Node: Function df_slice T indices22095
+Ref: #function-df_slice-t-indices22334
+Ref: #examples-2322442
+Node: Function df_rename T old_name new_name22585
+Ref: #function-df_rename-t-old_name-new_name22805
+Ref: #examples-2422893
+Node: Function df_mutate T col_name pred23028
+Ref: #function-df_mutate-t-col_name-pred23264
+Ref: #examples-2523505
+Node: Function df_summarize T name1 fn1 name2 fn2 ...23774
+Ref: #function-df_summarize-t-name1-fn1-name2-fn224031
+Ref: #examples-2624385
+Node: Function df_distinct T / df_distinct T cols24622
+Ref: #function-df_distinct-t-df_distinct-t-cols24870
+Ref: #examples-2725028
+Node: Function df_group_by T col_name25310
+Ref: #function-df_group_by-t-col_name25529
+Ref: #examples-2825757
+Node: Function df_inner_join T1 T2 key26277
+Ref: #function-df_inner_join-t1-t2-key26486
+Ref: #examples-2926648
+Node: Function df_left_join T1 T2 key27074
+Ref: #function-df_left_join-t1-t2-key27278
+Ref: #examples-3027503
+Node: Function df_bind_rows T1 T227614
+Ref: #function-df_bind_rows-t1-t227808
+Ref: #examples-3127942
+Node: Function df_bind_cols T1 T228151
+Ref: #function-df_bind_cols-t1-t228305
+Ref: #examples-3228470
+Node: Function and variable index28700
 
 End Tag Table
 
