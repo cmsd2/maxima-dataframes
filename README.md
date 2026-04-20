@@ -1,6 +1,8 @@
 # dataframes
 
-TODO: Describe what this package does.
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://cmsd2.github.io/maxima-dataframes/)
+
+Pandas-like tabular data for Maxima (SBCL only). Provides string-columns and mixed-type tables for working with real-world datasets that combine numeric and categorical data.
 
 ## Install
 
@@ -20,7 +22,9 @@ mxpm install --path .
 
 ```maxima
 load("dataframes");
-dataframes_hello();
+names : df_string_column(["Alice", "Bob", "Charlie"])$
+scores : ndarray([95.0, 87.0, 92.0])$
+T : df_table(["name", "score"], [names, scores]);
 ```
 
 ## Documentation
