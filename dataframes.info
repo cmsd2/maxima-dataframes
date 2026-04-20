@@ -1,4 +1,4 @@
-This is dataframes.info, produced by makeinfo version 7.3 from
+This is dataframes.info, produced by makeinfo version 7.1 from
 dataframes.texi.
 
 
@@ -185,19 +185,6 @@ See also: ‘df_to_string_list’, ‘df_string_column_p’
 
 * Menu:
 
-* Examples 2::
-* Examples 3::
-* Examples 4::
-* Examples 5::
-* Examples 6::
-* Examples 7::
-* Examples 8::
-* Examples 9::
-* Examples 10::
-* Examples 11::
-* Examples 12::
-* Examples 13::
-
 
 File: dataframes.info,  Node: Function df_to_string_list col,  Next: Function df_string_column_p x,  Prev: Function df_string_column list,  Up: String Columns
 
@@ -206,10 +193,7 @@ File: dataframes.info,  Node: Function df_to_string_list col,  Next: Function df
 
 * Menu:
 
-     * Examples: Examples 2.
-
-
-File: dataframes.info,  Node: Examples 2,  Next: Examples 3,  Up: Examples
+     * Examples::
 
 1.3.1.1 Examples
 ................
@@ -230,10 +214,7 @@ File: dataframes.info,  Node: Function df_string_column_p x,  Next: Function df_
 
 * Menu:
 
-     * Examples: Examples 3.
-
-
-File: dataframes.info,  Node: Examples 3,  Next: Examples 4,  Prev: Examples 2,  Up: Examples
+     * Examples::
 
 1.3.1.2 Examples
 ................
@@ -257,10 +238,7 @@ File: dataframes.info,  Node: Function df_string_column_ref col i,  Next: Functi
 
 * Menu:
 
-     * Examples: Examples 4.
-
-
-File: dataframes.info,  Node: Examples 4,  Next: Examples 5,  Prev: Examples 3,  Up: Examples
+     * Examples::
 
 1.3.1.3 Examples
 ................
@@ -282,10 +260,7 @@ File: dataframes.info,  Node: Function df_string_column_length col,  Next: Funct
 
 * Menu:
 
-     * Examples: Examples 5.
-
-
-File: dataframes.info,  Node: Examples 5,  Next: Examples 6,  Prev: Examples 4,  Up: Examples
+     * Examples::
 
 1.3.1.4 Examples
 ................
@@ -313,10 +288,7 @@ File: dataframes.info,  Node: Function df_table names columns,  Next: Function d
 
 * Menu:
 
-     * Examples: Examples 6.
-
-
-File: dataframes.info,  Node: Examples 6,  Next: Examples 7,  Prev: Examples 5,  Up: Examples
+     * Examples::
 
 1.3.1.5 Examples
 ................
@@ -346,10 +318,7 @@ File: dataframes.info,  Node: Function df_table_column T name,  Next: Function d
 
 * Menu:
 
-     * Examples: Examples 7.
-
-
-File: dataframes.info,  Node: Examples 7,  Next: Examples 8,  Prev: Examples 6,  Up: Examples
+     * Examples::
 
 1.3.1.6 Examples
 ................
@@ -374,10 +343,7 @@ File: dataframes.info,  Node: Function df_table_shape T,  Next: Function df_tabl
 
 * Menu:
 
-     * Examples: Examples 8.
-
-
-File: dataframes.info,  Node: Examples 8,  Next: Examples 9,  Prev: Examples 7,  Up: Examples
+     * Examples::
 
 1.3.1.7 Examples
 ................
@@ -398,10 +364,7 @@ File: dataframes.info,  Node: Function df_table_names T,  Next: Function df_tabl
 
 * Menu:
 
-     * Examples: Examples 9.
-
-
-File: dataframes.info,  Node: Examples 9,  Next: Examples 10,  Prev: Examples 8,  Up: Examples
+     * Examples::
 
 1.3.1.8 Examples
 ................
@@ -425,10 +388,7 @@ File: dataframes.info,  Node: Function df_table_head T / df_table_head T n,  Nex
 
 * Menu:
 
-     * Examples: Examples 10.
-
-
-File: dataframes.info,  Node: Examples 10,  Next: Examples 11,  Prev: Examples 9,  Up: Examples
+     * Examples::
 
 1.3.1.9 Examples
 ................
@@ -455,10 +415,7 @@ File: dataframes.info,  Node: Function df_table_to_ndarray T,  Next: Function df
 
 * Menu:
 
-     * Examples: Examples 11.
-
-
-File: dataframes.info,  Node: Examples 11,  Next: Examples 12,  Prev: Examples 10,  Up: Examples
+     * Examples::
 
 1.3.1.10 Examples
 .................
@@ -486,10 +443,7 @@ File: dataframes.info,  Node: Function df_ndarray_to_table A names,  Next: Funct
 
 * Menu:
 
-     * Examples: Examples 12.
-
-
-File: dataframes.info,  Node: Examples 12,  Next: Examples 13,  Prev: Examples 11,  Up: Examples
+     * Examples::
 
 1.3.1.11 Examples
 .................
@@ -514,10 +468,7 @@ File: dataframes.info,  Node: Function df_table_p x,  Prev: Function df_ndarray_
 
 * Menu:
 
-     * Examples: Examples 13.
-
-
-File: dataframes.info,  Node: Examples 13,  Prev: Examples 12,  Up: Examples
+     * Examples::
 
 1.3.1.12 Examples
 .................
@@ -566,45 +517,69 @@ Appendix A Function and variable index
 * df_to_string_list:                     Function df_to_string_list col.
                                                                 (line 3)
 
+
 
 Tag Table:
 Node: Top81
 Node: Package dataframes199
+Ref: #package-dataframes352
 Node: Introduction to dataframes443
+Ref: #introduction-to-dataframes626
 Node: Key concepts1098
+Ref: #key-concepts1236
 Node: Quick start1626
+Ref: #quick-start1785
 Node: String columns2243
+Ref: #string-columns2408
 Node: Mixed tables2725
+Ref: #mixed-tables2913
 Node: Converting between tables and ndarrays3321
+Ref: #converting-between-tables-and-ndarrays3538
 Node: Definitions for dataframes3761
+Ref: #definitions-for-dataframes3967
 Node: String Columns3967
+Ref: #string-columns-14114
 Node: Function df_string_column list4842
+Ref: #function-df_string_column-list5004
 Node: Examples5155
-Node: Function df_to_string_list col5757
-Node: Examples 26060
-Node: Function df_string_column_p x6368
-Node: Examples 36712
-Node: Function df_string_column_ref col i7116
-Node: Examples 47485
-Node: Function df_string_column_length col7933
-Node: Examples 58247
-Node: Function df_table names columns8825
-Node: Examples 69332
-Node: Function df_table_column T name9975
-Node: Examples 710397
-Node: Function df_table_shape T10972
-Node: Examples 811257
-Node: Function df_table_names T11611
-Node: Examples 911920
-Node: Function df_table_head T / df_table_head T n12282
-Node: Examples 1012712
-Node: Function df_table_to_ndarray T13241
-Node: Examples 1113713
-Node: Function df_ndarray_to_table A names14164
-Node: Examples 1214627
-Node: Function df_table_p x15095
-Node: Examples 1315378
-Node: Function and variable index15724
+Ref: #examples5249
+Node: Function df_to_string_list col5572
+Ref: #function-df_to_string_list-col5772
+Ref: #examples-15899
+Node: Function df_string_column_p x6094
+Ref: #function-df_string_column_p-x6298
+Ref: #examples-26462
+Node: Function df_string_column_ref col i6734
+Ref: #function-df_string_column_ref-col-i6951
+Ref: #examples-37127
+Node: Function df_string_column_length col7443
+Ref: #function-df_string_column_length-col7662
+Ref: #examples-47781
+Node: Function df_table names columns8227
+Ref: #function-df_table-names-columns8438
+Ref: #examples-58758
+Node: Function df_table_column T name9269
+Ref: #function-df_table_column-t-name9469
+Ref: #examples-69715
+Node: Function df_table_shape T10158
+Ref: #function-df_table_shape-t10345
+Ref: #examples-710467
+Node: Function df_table_names T10689
+Ref: #function-df_table_names-t10889
+Ref: #examples-811022
+Node: Function df_table_head T / df_table_head T n11251
+Ref: #function-df_table_head-t-df_table_head-t-n11478
+Ref: #examples-911704
+Node: Function df_table_to_ndarray T12099
+Ref: #function-df_table_to_ndarray-t12320
+Ref: #examples-1012596
+Node: Function df_ndarray_to_table A names12910
+Ref: #function-df_ndarray_to_table-a-names13115
+Ref: #examples-1113398
+Node: Function df_table_p x13729
+Ref: #function-df_table_p-x13879
+Ref: #examples-1214037
+Node: Function and variable index14266
 
 End Tag Table
 
