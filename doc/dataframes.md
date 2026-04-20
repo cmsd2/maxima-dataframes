@@ -75,3 +75,4 @@ The `dataframes` package provides pandas-like tabular data for Maxima. It extend
 <!-- include: manipulate.md -->
 <!-- include: groupby.md -->
 <!-- include: joins.md -->
+<!-- include: duckdb.md -->

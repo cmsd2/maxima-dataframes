@@ -45,7 +45,7 @@ Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumP
 (%i3) df_quantile(a, 0.5);
 (%o3)                         3.5
 (%i4) df_quantile(a, 0.75);
-(%o4)                         5.75
+(%o4)                         5.25
 ```
 
 See also: `df_median`, `df_describe`

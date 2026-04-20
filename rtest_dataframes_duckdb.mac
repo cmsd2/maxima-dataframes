@@ -1,0 +1,224 @@
+/* rtest_dataframes_duckdb.mac — Tests for DuckDB integration */
+
+(load("dataframes-duckdb"), true);
+true;
+
+/* ================================================================ */
+/* === Connection management === */
+/* ================================================================ */
+
+/* Before any operation, connection should be inactive */
+df_duckdb_status();
+false;
+
+/* ================================================================ */
+/* === df_sql — basic queries === */
+/* ================================================================ */
+
+/* Integer result */
+(T_int : df_sql("SELECT 42 AS answer"), true);
+true;
+
+df_table_shape(T_int);
+[1, 1];
+
+df_table_names(T_int);
+["answer"];
+
+/* Connection should now be active */
+df_duckdb_status();
+true;
+
+/* String result */
+(T_str : df_sql("SELECT 'hello' AS greeting"), true);
+true;
+
+df_to_string_list(df_table_column(T_str, "greeting"));
+["hello"];
+
+/* Double result */
+(T_dbl : df_sql("SELECT CAST(3.14 AS DOUBLE) AS pi_val"), true);
+true;
+
+/* Multi-row, multi-column */
+(T_multi : df_sql("SELECT * FROM (VALUES (1, 'a'), (2, 'b'), (3, 'c')) AS t(id, name)"),
+ true);
+true;
+
+df_table_shape(T_multi);
+[3, 2];
+
+/* ================================================================ */
+/* === df_read_csv / df_write_csv === */
+/* ================================================================ */
+
+/* Create a table, write to CSV, read back */
+(T_orig : df_table(["name", "price", "qty"],
+                   [df_string_column(["Widget", "Gadget", "Doohickey"]),
+                    ndarray([9.99, 24.99, 4.99]),
+                    ndarray([100.0, 50.0, 200.0])]),
+ df_write_csv(T_orig, "/tmp/rtest_duckdb_io.csv"),
+ true);
+true;
+
+(T_csv : df_read_csv("/tmp/rtest_duckdb_io.csv"), true);
+true;
+
+df_table_shape(T_csv);
+[3, 3];
+
+df_table_names(T_csv);
+["name", "price", "qty"];
+
+/* Verify values round-trip correctly */
+df_to_string_list(df_table_column(T_csv, "name"));
+["Widget", "Gadget", "Doohickey"];
+
+/* ================================================================ */
+/* === df_read_parquet / df_write_parquet === */
+/* ================================================================ */
+
+(df_write_parquet(T_orig, "/tmp/rtest_duckdb_io.parquet"), true);
+true;
+
+(T_pq : df_read_parquet("/tmp/rtest_duckdb_io.parquet"), true);
+true;
+
+df_table_shape(T_pq);
+[3, 3];
+
+df_table_names(T_pq);
+["name", "price", "qty"];
+
+/* ================================================================ */
+/* === df_register / df_unregister / SQL on registered tables === */
+/* ================================================================ */
+
+(df_register(T_orig, "products"), true);
+true;
+
+/* Query registered table */
+(T_q : df_sql("SELECT * FROM products WHERE price > 10"), true);
+true;
+
+df_table_shape(T_q);
+[1, 3];
+
+/* Aggregation on registered table */
+(T_agg : df_sql("SELECT count(*) AS n, avg(price) AS avg_price FROM products"),
+ true);
+true;
+
+df_table_shape(T_agg);
+[1, 2];
+
+/* Unregister */
+(df_unregister("products"), true);
+true;
+
+/* Re-register should work */
+(df_register(T_orig, "products"), true);
+true;
+
+(df_unregister("products"), true);
+true;
+
+/* ================================================================ */
+/* === df_duckdb_filter === */
+/* ================================================================ */
+
+(T_filt : df_duckdb_filter(T_orig, "price > 10"), true);
+true;
+
+df_table_shape(T_filt);
+[1, 3];
+
+df_to_string_list(df_table_column(T_filt, "name"));
+["Gadget"];
+
+/* Filter all rows (empty result) */
+df_table_shape(df_duckdb_filter(T_orig, "price > 1000"));
+[0, 3];
+
+/* Filter no rows (keep all) */
+df_table_shape(df_duckdb_filter(T_orig, "price > 0"));
+[3, 3];
+
+/* ================================================================ */
+/* === df_duckdb_arrange === */
+/* ================================================================ */
+
+(T_sort : df_duckdb_arrange(T_orig, "price"), true);
+true;
+
+df_table_shape(T_sort);
+[3, 3];
+
+df_to_string_list(df_table_column(T_sort, "name"));
+["Doohickey", "Widget", "Gadget"];
+
+/* Descending */
+(T_desc : df_duckdb_arrange(T_orig, "price", descending), true);
+true;
+
+df_to_string_list(df_table_column(T_desc, "name"));
+["Gadget", "Widget", "Doohickey"];
+
+/* ================================================================ */
+/* === df_duckdb_join === */
+/* ================================================================ */
+
+(Tj1 : df_table(["id", "name"],
+                [df_string_column(["1", "2", "3"]),
+                 df_string_column(["Alice", "Bob", "Charlie"])]),
+ Tj2 : df_table(["id", "score"],
+                [df_string_column(["1", "2", "4"]),
+                 ndarray([90.0, 80.0, 70.0])]),
+ true);
+true;
+
+/* Inner join */
+(T_ij : df_duckdb_join(Tj1, Tj2, "id"), true);
+true;
+
+df_table_shape(T_ij);
+[2, 3];
+
+/* Left join */
+(T_lj : df_duckdb_join(Tj1, Tj2, "id", left), true);
+true;
+
+df_table_shape(T_lj);
+[3, 3];
+
+/* ================================================================ */
+/* === df_duckdb_group_summarize === */
+/* ================================================================ */
+
+(T_grp : df_table(["region", "revenue"],
+                  [df_string_column(["N", "S", "N", "S", "N"]),
+                   ndarray([10.0, 20.0, 30.0, 40.0, 50.0])]),
+ true);
+true;
+
+(T_gs : df_duckdb_group_summarize(T_grp, "region",
+          "total", "sum(revenue)",
+          "avg_rev", "avg(revenue)"),
+ true);
+true;
+
+df_table_shape(T_gs);
+[2, 3];
+
+df_table_names(T_gs);
+["region", "total", "avg_rev"];
+
+/* ================================================================ */
+/* === Connection cleanup === */
+/* ================================================================ */
+
+(df_duckdb_close(), true);
+true;
+
+df_duckdb_status();
+false;

@@ -1,0 +1,20 @@
+/* dataframes-duckdb — DuckDB I/O and SQL for Maxima dataframes (SBCL only)
+ *
+ * Usage:
+ *   load("dataframes-duckdb");
+ *   T : df_read_csv("/path/to/data.csv");
+ *   df_register(T, "mydata");
+ *   R : df_sql("SELECT * FROM mydata WHERE x > 10");
+ *
+ * Requires: libduckdb (brew install duckdb)
+ */
+
+/* Verify SBCL */
+if not is(build_info()@lisp_name = "SBCL") then
+  error("dataframes-duckdb requires SBCL; current Lisp is", build_info()@lisp_name)$
+
+/* Ensure dataframes is loaded first */
+load("dataframes")$
+
+/* Load the DuckDB extension */
+load("dataframes-duckdb-loader.lisp")$

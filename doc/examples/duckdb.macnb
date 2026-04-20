@@ -1,0 +1,445 @@
+{
+ "nbformat": 4,
+ "nbformat_minor": 5,
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Maxima",
+   "language": "maxima",
+   "name": "maxima"
+  }
+ },
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "source": [
+    "# DuckDB Integration with Dataframes\n",
+    "\n",
+    "This notebook demonstrates using DuckDB for file I/O, SQL queries,\n",
+    "table registration, and accelerated operations on dataframes."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "load(\"dataframes-duckdb\")$"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 1. Creating and Exporting Data\n",
+    "\n",
+    "Build a table in Maxima, then write it to CSV and Parquet."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "sales : df_table(\n",
+    "  [\"region\", \"product\", \"price\", \"qty\"],\n",
+    "  [df_string_column([\"North\", \"South\", \"North\", \"East\", \"South\",\n",
+    "                     \"West\", \"North\", \"East\", \"South\", \"West\",\n",
+    "                     \"North\", \"East\"]),\n",
+    "   df_string_column([\"Widget\", \"Gadget\", \"Doohickey\", \"Widget\", \"Widget\",\n",
+    "                     \"Gadget\", \"Gadget\", \"Doohickey\", \"Doohickey\", \"Widget\",\n",
+    "                     \"Widget\", \"Gadget\"]),\n",
+    "   ndarray([9.99, 24.99, 4.99, 9.99, 9.99,\n",
+    "            24.99, 24.99, 4.99, 4.99, 9.99,\n",
+    "            9.99, 24.99]),\n",
+    "   ndarray([100.0, 50.0, 200.0, 75.0, 120.0,\n",
+    "            30.0, 80.0, 150.0, 90.0, 60.0,\n",
+    "            110.0, 45.0])])$"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_write_csv(sales, \"/tmp/sales_demo.csv\")$\n",
+    "df_write_parquet(sales, \"/tmp/sales_demo.parquet\")$\n",
+    "print(\"Files written to /tmp/\")$"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 2. Reading Data from Files\n",
+    "\n",
+    "DuckDB auto-detects column types, delimiters, and encoding."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "T_csv : df_read_csv(\"/tmp/sales_demo.csv\")$\n",
+    "df_table_shape(T_csv);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "T_pq : df_read_parquet(\"/tmp/sales_demo.parquet\")$\n",
+    "df_table_shape(T_pq);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Verify the CSV round-trip */\n",
+    "df_table_names(T_csv);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "T_csv;"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 3. SQL Queries on Files\n",
+    "\n",
+    "DuckDB can read files directly in SQL — no need to load them into Maxima first."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Query CSV file directly */\n",
+    "expensive : df_sql(\"SELECT * FROM read_csv('/tmp/sales_demo.csv') WHERE price > 10\")$\n",
+    "expensive;"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Aggregation directly on a file */\n",
+    "df_sql(\"SELECT region, count(*) AS n, avg(price) AS avg_price \n",
+    "        FROM read_csv('/tmp/sales_demo.csv') \n",
+    "        GROUP BY region \n",
+    "        ORDER BY avg_price DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 4. Registering Tables for SQL\n",
+    "\n",
+    "Register a Maxima `df_table` so it can be queried with SQL by name."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_register(sales, \"sales\")$"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Filter with SQL */\n",
+    "df_sql(\"SELECT * FROM sales WHERE region = 'North' AND qty > 100\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Revenue per region */\n",
+    "df_sql(\"SELECT region, \n",
+    "               sum(price * qty) AS total_revenue,\n",
+    "               count(*) AS num_orders\n",
+    "        FROM sales \n",
+    "        GROUP BY region \n",
+    "        ORDER BY total_revenue DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Top product by total quantity sold */\n",
+    "df_sql(\"SELECT product, sum(qty) AS total_qty \n",
+    "        FROM sales \n",
+    "        GROUP BY product \n",
+    "        ORDER BY total_qty DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Window function: rank products by revenue within each region */\n",
+    "df_sql(\"SELECT region, product, price * qty AS revenue,\n",
+    "               rank() OVER (PARTITION BY region ORDER BY price * qty DESC) AS rank\n",
+    "        FROM sales\n",
+    "        ORDER BY region, rank\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 5. Joining Tables with SQL\n",
+    "\n",
+    "Create a second table and join them via SQL."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Region metadata table */\n",
+    "regions : df_table(\n",
+    "  [\"region\", \"manager\", \"target\"],\n",
+    "  [df_string_column([\"North\", \"South\", \"East\", \"West\"]),\n",
+    "   df_string_column([\"Alice\", \"Bob\", \"Charlie\", \"Diana\"]),\n",
+    "   ndarray([5000.0, 4000.0, 3000.0, 2000.0])])$\n",
+    "df_register(regions, \"regions\")$\n",
+    "regions;"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Join sales with region metadata */\n",
+    "df_sql(\"SELECT r.manager, r.region, \n",
+    "               sum(s.price * s.qty) AS actual_revenue,\n",
+    "               r.target,\n",
+    "               sum(s.price * s.qty) - r.target AS vs_target\n",
+    "        FROM sales s\n",
+    "        JOIN regions r ON s.region = r.region\n",
+    "        GROUP BY r.manager, r.region, r.target\n",
+    "        ORDER BY vs_target DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 6. DuckDB-Accelerated Operations\n",
+    "\n",
+    "These use DuckDB's engine directly, accepting SQL expressions\n",
+    "instead of Maxima lambdas."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Filter with SQL expression */\n",
+    "df_duckdb_filter(sales, \"price < 10 AND qty >= 100\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Sort by qty descending */\n",
+    "df_duckdb_arrange(sales, \"qty\", descending);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Group-summarize: revenue stats by region */\n",
+    "df_duckdb_group_summarize(sales, \"region\",\n",
+    "  \"total_revenue\", \"sum(price * qty)\",\n",
+    "  \"avg_price\", \"avg(price)\",\n",
+    "  \"num_orders\", \"count(*)\",\n",
+    "  \"max_qty\", \"max(qty)\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* DuckDB join */\n",
+    "df_duckdb_join(sales, regions, \"region\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 7. Mixing DuckDB and Maxima Operations\n",
+    "\n",
+    "Use DuckDB for I/O and heavy queries, then Maxima for math."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Get aggregated data via SQL */\n",
+    "summary : df_sql(\"SELECT region, \n",
+    "                         sum(price * qty) AS revenue,\n",
+    "                         sum(qty) AS units\n",
+    "                  FROM sales \n",
+    "                  GROUP BY region\")$\n",
+    "summary;"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Add derived column using Maxima lambda */\n",
+    "df_mutate(summary, \"avg_unit_price\", \n",
+    "          lambda([revenue, units], revenue / units));"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Use Maxima's np_mean on a column extracted from a DuckDB query result */\n",
+    "revenue_col : df_table_column(summary, \"revenue\")$\n",
+    "np_mean(revenue_col);\n",
+    "np_std(revenue_col);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Full describe on the SQL result */\n",
+    "df_describe(summary);"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 8. Advanced SQL: CTEs and Subqueries\n",
+    "\n",
+    "DuckDB supports the full SQL standard, including Common Table Expressions."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* CTE: find regions with above-average revenue */\n",
+    "df_sql(\"WITH region_revenue AS (\n",
+    "          SELECT region, sum(price * qty) AS revenue\n",
+    "          FROM sales GROUP BY region\n",
+    "        ),\n",
+    "        avg_rev AS (\n",
+    "          SELECT avg(revenue) AS avg_revenue FROM region_revenue\n",
+    "        )\n",
+    "        SELECT r.region, r.revenue, a.avg_revenue\n",
+    "        FROM region_revenue r, avg_rev a\n",
+    "        WHERE r.revenue > a.avg_revenue\n",
+    "        ORDER BY r.revenue DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Pivot-style: product revenue by region */\n",
+    "df_sql(\"SELECT product,\n",
+    "               sum(CASE WHEN region='North' THEN price*qty ELSE 0 END) AS north,\n",
+    "               sum(CASE WHEN region='South' THEN price*qty ELSE 0 END) AS south,\n",
+    "               sum(CASE WHEN region='East'  THEN price*qty ELSE 0 END) AS east,\n",
+    "               sum(CASE WHEN region='West'  THEN price*qty ELSE 0 END) AS west,\n",
+    "               sum(price*qty) AS total\n",
+    "        FROM sales\n",
+    "        GROUP BY product\n",
+    "        ORDER BY total DESC\");"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 9. Cleanup\n",
+    "\n",
+    "Unregister tables and close the DuckDB connection."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_unregister(\"sales\")$\n",
+    "df_unregister(\"regions\")$\n",
+    "df_duckdb_close()$\n",
+    "df_duckdb_status();"
+   ],
+   "metadata": {},
+   "execution_count": null,
+   "outputs": []
+  }
+ ]
+}
