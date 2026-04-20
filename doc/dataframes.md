@@ -71,3 +71,4 @@ The `dataframes` package provides pandas-like tabular data for Maxima. It extend
 
 <!-- include: string-column.md -->
 <!-- include: table.md -->
+<!-- include: describe.md -->

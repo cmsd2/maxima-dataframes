@@ -4,6 +4,12 @@
 (load("dataframes"), true);
 true;
 
+/* test helper: float close comparison */
+(isclose(a, b, [opts]) := block([tol],
+  tol : if length(opts) > 0 then first(opts) else 1e-10,
+  is(abs(float(a) - float(b)) <= tol)), true);
+true;
+
 /* === String column creation === */
 
 /* create from list of strings */
@@ -127,4 +133,224 @@ errcatch(df_string_column_ref(sc, 4));
 
 /* column not found */
 errcatch(df_table_column(T1, "nonexistent"));
+[];
+
+/* === Column aggregation functions === */
+
+/* df_count on ndarray */
+(a8 : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0]), true);
+true;
+
+df_count(a8);
+8;
+
+/* df_count on string column */
+(sc6 : df_string_column(["a", "b", "a", "c", "b", "a"]), true);
+true;
+
+df_count(sc6);
+6;
+
+/* df_median odd count */
+df_median(ndarray([3.0, 1.0, 2.0]));
+2.0;
+
+/* df_median even count */
+df_median(ndarray([4.0, 1.0, 3.0, 2.0]));
+2.5;
+
+/* df_median single element */
+df_median(ndarray([7.0]));
+7.0;
+
+/* df_quantile */
+df_quantile(a8, 0.0);
+1.0;
+
+df_quantile(a8, 1.0);
+9.0;
+
+df_quantile(a8, 0.5);
+3.5;
+
+/* isclose */
+isclose(1.0, 1.0);
+true;
+
+isclose(1.0, 2.0);
+false;
+
+isclose(1.0, 1.05, 0.1);
+true;
+
+isclose(1.0, 1.2, 0.1);
+false;
+
+/* df_quantile 25th and 75th */
+isclose(df_quantile(a8, 0.25), 1.75);
+true;
+
+isclose(df_quantile(a8, 0.75), 5.25);
+true;
+
+/* df_unique */
+(u : df_unique(sc6), df_string_column_p(u));
+true;
+
+df_string_column_length(df_unique(sc6));
+3;
+
+df_to_string_list(df_unique(sc6));
+["a", "b", "c"];
+
+/* df_nunique on string column */
+df_nunique(sc6);
+3;
+
+/* df_nunique on ndarray */
+df_nunique(ndarray([1.0, 2.0, 1.0, 3.0, 2.0]));
+3;
+
+/* df_value_counts */
+(vc : df_value_counts(sc6), df_table_p(vc));
+true;
+
+df_table_shape(vc);
+[3, 2];
+
+df_table_names(vc);
+["value", "count"];
+
+/* top value should be "a" with count 3 */
+df_string_column_ref(df_table_column(vc, "value"), 1);
+"a";
+
+np_to_list(df_table_column(vc, "count"));
+[3.0, 2.0, 1.0];
+
+/* === df_describe === */
+
+(prices : ndarray([10.0, 20.0, 30.0, 40.0, 50.0]),
+ names5 : df_string_column(["A", "B", "C", "D", "E"]),
+ Td : df_table(["name", "price"], [names5, prices]),
+ D : df_describe(Td),
+ true);
+true;
+
+/* shape: 8 stats, 2 columns (stat + price) */
+df_table_shape(D);
+[8, 2];
+
+df_table_names(D);
+["stat", "price"];
+
+/* stat labels */
+df_to_string_list(df_table_column(D, "stat"));
+["count", "mean", "std", "min", "25%", "50%", "75%", "max"];
+
+/* check count = 5 */
+(desc_vals : np_to_list(df_table_column(D, "price")),
+ is(first(desc_vals) = 5.0));
+true;
+
+/* check mean = 30 */
+is(second(desc_vals) = 30.0);
+true;
+
+/* check min = 10 */
+is(fourth(desc_vals) = 10.0);
+true;
+
+/* check median (50%) = 30 */
+is(sixth(desc_vals) = 30.0);
+true;
+
+/* check max = 50 */
+is(eighth(desc_vals) = 50.0);
+true;
+
+/* df_describe skips string columns */
+(Td2 : df_table(["x", "label", "y"],
+                 [ndarray([1.0, 2.0]), df_string_column(["a", "b"]), ndarray([3.0, 4.0])]),
+ D2 : df_describe(Td2),
+ true);
+true;
+
+df_table_names(D2);
+["stat", "x", "y"];
+
+/* === Cross-validation against Maxima descriptive package === */
+
+(load("descriptive"), true);
+true;
+
+/* Test dataset 1: a8 = [3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0] */
+(data1 : [3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0], true);
+true;
+
+/* median matches */
+is(df_median(a8) = median(data1));
+true;
+
+/* quantile 0.25 matches */
+isclose(df_quantile(a8, 0.25), quantile(data1, 0.25));
+true;
+
+/* quantile 0.5 matches */
+isclose(df_quantile(a8, 0.5), quantile(data1, 0.5));
+true;
+
+/* quantile 0.75 matches */
+isclose(df_quantile(a8, 0.75), quantile(data1, 0.75));
+true;
+
+/* mean matches (via df_describe) */
+isclose(np_mean(a8), mean(data1));
+true;
+
+/* Test dataset 2: prices = [10.0, 20.0, 30.0, 40.0, 50.0] */
+(data2 : [10.0, 20.0, 30.0, 40.0, 50.0], true);
+true;
+
+/* df_describe std matches std1 (sample, n-1) */
+(D_prices : df_describe(Td),
+ price_stats : np_to_list(df_table_column(D_prices, "price")),
+ isclose(third(price_stats), std1(data2)));
+true;
+
+/* df_describe mean matches */
+isclose(second(price_stats), mean(data2));
+true;
+
+/* df_describe median matches */
+isclose(sixth(price_stats), median(data2));
+true;
+
+/* df_describe 25% matches quantile */
+isclose(fifth(price_stats), quantile(data2, 0.25));
+true;
+
+/* df_describe 75% matches quantile */
+isclose(seventh(price_stats), quantile(data2, 0.75));
+true;
+
+/* Test dataset 3: larger odd-length dataset */
+(data3 : [2.0, 7.0, 1.0, 8.0, 3.0, 6.0, 4.0, 9.0, 5.0],
+ a9 : ndarray(data3), true);
+true;
+
+isclose(df_median(a9), median(data3));
+true;
+
+isclose(df_quantile(a9, 0.25), quantile(data3, 0.25));
+true;
+
+isclose(df_quantile(a9, 0.75), quantile(data3, 0.75));
+true;
+
+/* error cases */
+errcatch(df_median(ndarray([])));
+[];
+
+errcatch(df_quantile(a8, 1.5));
 [];

@@ -10,4 +10,5 @@
   ((:file "packages")
    (:file "string-column")
    (:file "table")
+   (:file "describe")
    (:file "display")))
