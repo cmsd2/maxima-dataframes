@@ -3,6 +3,82 @@
   "package": "dataframes",
   "source": "./doc/dataframes.md",
   "symbols": {
+    "df_count": {
+      "type": "Function",
+      "signature": "df_count(col)",
+      "summary": "Count the number of elements in a column. Works on both ndarray and string-column.",
+      "body_md": "Count the number of elements in a column. Works on both ndarray and string-column.\n\n#### Examples\n\n```maxima\n(%i1) df_count(ndarray([1.0, 2.0, 3.0]));\n(%o1)                          3\n(%i2) df_count(df_string_column([\"a\", \"b\"]));\n(%o2)                          2\n```\n\nSee also: `df_nunique`, `df_describe`",
+      "examples": [
+        {
+          "input": "df_count(ndarray([1.0, 2.0, 3.0]));",
+          "output": "3"
+        },
+        {
+          "input": "df_count(df_string_column([\"a\", \"b\"]));",
+          "output": "2"
+        }
+      ],
+      "see_also": [
+        "df_nunique",
+        "df_describe"
+      ],
+      "section": "Column Aggregation and Describe"
+    },
+    "df_describe": {
+      "type": "Function",
+      "signature": "df_describe(T)",
+      "summary": "Summary statistics for the numeric columns of a table. Returns a new df_table with a \"stat\" string-column labeling each row and one ndarray column per numeric input column. String columns are skipped.",
+      "body_md": "Summary statistics for the numeric columns of a table. Returns a new `df_table` with a `\"stat\"` string-column labeling each row and one ndarray column per numeric input column. String columns are skipped.\n\nThe statistics computed are: count, mean, std (sample, n-1 denominator), min, 25%, 50% (median), 75%, max.\n\n#### Examples\n\n```maxima\n(%i1) prices : ndarray([10.0, 20.0, 30.0, 40.0, 50.0])$\n(%i2) names : df_string_column([\"A\", \"B\", \"C\", \"D\", \"E\"])$\n(%i3) T : df_table([\"name\", \"price\"], [names, prices])$\n(%i4) df_describe(T);\n(%o4)              df_table: 8 rows x 2 cols\n(%i5) df_table_names(df_describe(T));\n(%o5)                    [stat, price]\n```\n\nSee also: `df_median`, `df_quantile`, `df_count`",
+      "examples": [
+        {
+          "input": "prices : ndarray([10.0, 20.0, 30.0, 40.0, 50.0])$",
+          "output": ""
+        },
+        {
+          "input": "names : df_string_column([\"A\", \"B\", \"C\", \"D\", \"E\"])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"name\", \"price\"], [names, prices])$",
+          "output": ""
+        },
+        {
+          "input": "df_describe(T);",
+          "output": "df_table: 8 rows x 2 cols"
+        },
+        {
+          "input": "df_table_names(df_describe(T));",
+          "output": "[stat, price]"
+        }
+      ],
+      "see_also": [
+        "df_median",
+        "df_quantile",
+        "df_count"
+      ],
+      "section": "Column Aggregation and Describe"
+    },
+    "df_median": {
+      "type": "Function",
+      "signature": "df_median(col)",
+      "summary": "Median of a 1D ndarray. For even-length arrays, returns the average of the two middle values.",
+      "body_md": "Median of a 1D ndarray. For even-length arrays, returns the average of the two middle values.\n\n#### Examples\n\n```maxima\n(%i1) df_median(ndarray([3.0, 1.0, 2.0]));\n(%o1)                         2.0\n(%i2) df_median(ndarray([4.0, 1.0, 3.0, 2.0]));\n(%o2)                         2.5\n```\n\nSee also: `df_quantile`, `df_describe`",
+      "examples": [
+        {
+          "input": "df_median(ndarray([3.0, 1.0, 2.0]));",
+          "output": "2.0"
+        },
+        {
+          "input": "df_median(ndarray([4.0, 1.0, 3.0, 2.0]));",
+          "output": "2.5"
+        }
+      ],
+      "see_also": [
+        "df_quantile",
+        "df_describe"
+      ],
+      "section": "Column Aggregation and Describe"
+    },
     "df_ndarray_to_table": {
       "type": "Function",
       "signature": "df_ndarray_to_table(A, names)",
@@ -35,6 +111,56 @@
         "df_table"
       ],
       "section": "Tables"
+    },
+    "df_nunique": {
+      "type": "Function",
+      "signature": "df_nunique(col)",
+      "summary": "Count of unique values in a column. Works on both ndarray and string-column.",
+      "body_md": "Count of unique values in a column. Works on both ndarray and string-column.\n\n#### Examples\n\n```maxima\n(%i1) df_nunique(df_string_column([\"a\", \"b\", \"a\", \"c\"]));\n(%o1)                          3\n(%i2) df_nunique(ndarray([1.0, 2.0, 1.0, 3.0]));\n(%o2)                          3\n```\n\nSee also: `df_unique`, `df_value_counts`",
+      "examples": [
+        {
+          "input": "df_nunique(df_string_column([\"a\", \"b\", \"a\", \"c\"]));",
+          "output": "3"
+        },
+        {
+          "input": "df_nunique(ndarray([1.0, 2.0, 1.0, 3.0]));",
+          "output": "3"
+        }
+      ],
+      "see_also": [
+        "df_unique",
+        "df_value_counts"
+      ],
+      "section": "Column Aggregation and Describe"
+    },
+    "df_quantile": {
+      "type": "Function",
+      "signature": "df_quantile(col, p)",
+      "summary": "Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumPy default method).",
+      "body_md": "Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumPy default method).\n\n#### Examples\n\n```maxima\n(%i1) a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$\n(%i2) df_quantile(a, 0.25);\n(%o2)                         1.75\n(%i3) df_quantile(a, 0.5);\n(%o3)                         3.5\n(%i4) df_quantile(a, 0.75);\n(%o4)                         5.75\n```\n\nSee also: `df_median`, `df_describe`",
+      "examples": [
+        {
+          "input": "a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$",
+          "output": ""
+        },
+        {
+          "input": "df_quantile(a, 0.25);",
+          "output": "1.75"
+        },
+        {
+          "input": "df_quantile(a, 0.5);",
+          "output": "3.5"
+        },
+        {
+          "input": "df_quantile(a, 0.75);",
+          "output": "5.75"
+        }
+      ],
+      "see_also": [
+        "df_median",
+        "df_describe"
+      ],
+      "section": "Column Aggregation and Describe"
     },
     "df_string_column": {
       "type": "Function",
@@ -386,6 +512,60 @@
         "df_string_column"
       ],
       "section": "String Columns"
+    },
+    "df_unique": {
+      "type": "Function",
+      "signature": "df_unique(col)",
+      "summary": "Return a new string-column with the unique values from a string-column, preserving first-occurrence order.",
+      "body_md": "Return a new string-column with the unique values from a string-column, preserving first-occurrence order.\n\n#### Examples\n\n```maxima\n(%i1) sc : df_string_column([\"a\", \"b\", \"a\", \"c\", \"b\"])$\n(%i2) df_to_string_list(df_unique(sc));\n(%o2)                      [a, b, c]\n```\n\nSee also: `df_nunique`, `df_value_counts`",
+      "examples": [
+        {
+          "input": "sc : df_string_column([\"a\", \"b\", \"a\", \"c\", \"b\"])$",
+          "output": ""
+        },
+        {
+          "input": "df_to_string_list(df_unique(sc));",
+          "output": "[a, b, c]"
+        }
+      ],
+      "see_also": [
+        "df_nunique",
+        "df_value_counts"
+      ],
+      "section": "Column Aggregation and Describe"
+    },
+    "df_value_counts": {
+      "type": "Function",
+      "signature": "df_value_counts(col)",
+      "summary": "Frequency table for a column, returned as a df_table with columns \"value\" and \"count\", sorted by count descending. Works on string-columns and ndarrays.",
+      "body_md": "Frequency table for a column, returned as a `df_table` with columns `\"value\"` and `\"count\"`, sorted by count descending. Works on string-columns and ndarrays.\n\n#### Examples\n\n```maxima\n(%i1) sc : df_string_column([\"a\", \"b\", \"a\", \"c\", \"b\", \"a\"])$\n(%i2) vc : df_value_counts(sc)$\n(%i3) df_table_names(vc);\n(%o3)                    [value, count]\n(%i4) df_to_string_list(df_table_column(vc, \"value\"));\n(%o4)                      [a, b, c]\n(%i5) np_to_list(df_table_column(vc, \"count\"));\n(%o5)                  [3.0, 2.0, 1.0]\n```\n\nSee also: `df_nunique`, `df_unique`",
+      "examples": [
+        {
+          "input": "sc : df_string_column([\"a\", \"b\", \"a\", \"c\", \"b\", \"a\"])$",
+          "output": ""
+        },
+        {
+          "input": "vc : df_value_counts(sc)$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(vc);",
+          "output": "[value, count]"
+        },
+        {
+          "input": "df_to_string_list(df_table_column(vc, \"value\"));",
+          "output": "[a, b, c]"
+        },
+        {
+          "input": "np_to_list(df_table_column(vc, \"count\"));",
+          "output": "[3.0, 2.0, 1.0]"
+        }
+      ],
+      "see_also": [
+        "df_nunique",
+        "df_unique"
+      ],
+      "section": "Column Aggregation and Describe"
     }
   },
   "sections": [
@@ -404,6 +584,10 @@
         {
           "title": "Tables",
           "body_md": "A **df_table** is a columnar table with named, typed columns. Each column is either an ndarray (numeric data) or a string-column (text data). All columns must have the same number of rows."
+        },
+        {
+          "title": "Column Aggregation and Describe",
+          "body_md": "Column-level aggregation functions and `df_describe` for summary statistics. These functions work on individual columns (ndarray or string-column) and return scalars or new structures."
         }
       ]
     }

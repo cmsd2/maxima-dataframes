@@ -155,6 +155,13 @@ String-columns use *1-based indexing* (matching Maxima convention).
 * Function df_table_to_ndarray T::
 * Function df_ndarray_to_table A names::
 * Function df_table_p x::
+* Function df_count col::
+* Function df_median col::
+* Function df_quantile col p::
+* Function df_unique col::
+* Function df_nunique col::
+* Function df_value_counts col::
+* Function df_describe T::
 
 
 File: dataframes.info,  Node: Function df_string_column list,  Next: Function df_to_string_list col,  Up: String Columns
@@ -460,7 +467,7 @@ File: dataframes.info,  Node: Function df_ndarray_to_table A names,  Next: Funct
 See also: ‘df_table_to_ndarray’, ‘df_table’
 
 
-File: dataframes.info,  Node: Function df_table_p x,  Prev: Function df_ndarray_to_table A names,  Up: String Columns
+File: dataframes.info,  Node: Function df_table_p x,  Next: Function df_count col,  Prev: Function df_ndarray_to_table A names,  Up: String Columns
 
  -- Function: df_table_p (X)
      Predicate: return ‘true’ if ‘x’ is a table handle, ‘false’
@@ -480,7 +487,174 @@ File: dataframes.info,  Node: Function df_table_p x,  Prev: Function df_ndarray_
 (%i4) df_table_p(42);
 (%o4)                        false
 
-See also: ‘df_table’, ‘df_string_column_p’
+See also: ‘df_table’, ‘df_string_column_p’ ## Column Aggregation and
+Describe
+
+Column-level aggregation functions and ‘df_describe’ for summary
+statistics.  These functions work on individual columns (ndarray or
+string-column) and return scalars or new structures.
+
+
+File: dataframes.info,  Node: Function df_count col,  Next: Function df_median col,  Prev: Function df_table_p x,  Up: String Columns
+
+ -- Function: df_count (COL)
+     Count the number of elements in a column.  Works on both ndarray
+     and string-column.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.13 Examples
+.................
+
+(%i1) df_count(ndarray([1.0, 2.0, 3.0]));
+(%o1)                          3
+(%i2) df_count(df_string_column(["a", "b"]));
+(%o2)                          2
+
+See also: ‘df_nunique’, ‘df_describe’
+
+
+File: dataframes.info,  Node: Function df_median col,  Next: Function df_quantile col p,  Prev: Function df_count col,  Up: String Columns
+
+ -- Function: df_median (COL)
+     Median of a 1D ndarray.  For even-length arrays, returns the
+     average of the two middle values.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.14 Examples
+.................
+
+(%i1) df_median(ndarray([3.0, 1.0, 2.0]));
+(%o1)                         2.0
+(%i2) df_median(ndarray([4.0, 1.0, 3.0, 2.0]));
+(%o2)                         2.5
+
+See also: ‘df_quantile’, ‘df_describe’
+
+
+File: dataframes.info,  Node: Function df_quantile col p,  Next: Function df_unique col,  Prev: Function df_median col,  Up: String Columns
+
+ -- Function: df_quantile (COL, P)
+     Compute the p-quantile (0 to 1) of a 1D ndarray using linear
+     interpolation (NumPy default method).
+
+* Menu:
+
+     * Examples::
+
+1.3.1.15 Examples
+.................
+
+(%i1) a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$
+(%i2) df_quantile(a, 0.25);
+(%o2)                         1.75
+(%i3) df_quantile(a, 0.5);
+(%o3)                         3.5
+(%i4) df_quantile(a, 0.75);
+(%o4)                         5.75
+
+See also: ‘df_median’, ‘df_describe’
+
+
+File: dataframes.info,  Node: Function df_unique col,  Next: Function df_nunique col,  Prev: Function df_quantile col p,  Up: String Columns
+
+ -- Function: df_unique (COL)
+     Return a new string-column with the unique values from a
+     string-column, preserving first-occurrence order.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.16 Examples
+.................
+
+(%i1) sc : df_string_column(["a", "b", "a", "c", "b"])$
+(%i2) df_to_string_list(df_unique(sc));
+(%o2)                      [a, b, c]
+
+See also: ‘df_nunique’, ‘df_value_counts’
+
+
+File: dataframes.info,  Node: Function df_nunique col,  Next: Function df_value_counts col,  Prev: Function df_unique col,  Up: String Columns
+
+ -- Function: df_nunique (COL)
+     Count of unique values in a column.  Works on both ndarray and
+     string-column.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.17 Examples
+.................
+
+(%i1) df_nunique(df_string_column(["a", "b", "a", "c"]));
+(%o1)                          3
+(%i2) df_nunique(ndarray([1.0, 2.0, 1.0, 3.0]));
+(%o2)                          3
+
+See also: ‘df_unique’, ‘df_value_counts’
+
+
+File: dataframes.info,  Node: Function df_value_counts col,  Next: Function df_describe T,  Prev: Function df_nunique col,  Up: String Columns
+
+ -- Function: df_value_counts (COL)
+     Frequency table for a column, returned as a ‘df_table’ with columns
+     ‘"value"’ and ‘"count"’, sorted by count descending.  Works on
+     string-columns and ndarrays.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.18 Examples
+.................
+
+(%i1) sc : df_string_column(["a", "b", "a", "c", "b", "a"])$
+(%i2) vc : df_value_counts(sc)$
+(%i3) df_table_names(vc);
+(%o3)                    [value, count]
+(%i4) df_to_string_list(df_table_column(vc, "value"));
+(%o4)                      [a, b, c]
+(%i5) np_to_list(df_table_column(vc, "count"));
+(%o5)                  [3.0, 2.0, 1.0]
+
+See also: ‘df_nunique’, ‘df_unique’
+
+
+File: dataframes.info,  Node: Function df_describe T,  Prev: Function df_value_counts col,  Up: String Columns
+
+ -- Function: df_describe (T)
+     Summary statistics for the numeric columns of a table.  Returns a
+     new ‘df_table’ with a ‘"stat"’ string-column labeling each row and
+     one ndarray column per numeric input column.  String columns are
+     skipped.
+
+     The statistics computed are: count, mean, std (sample, n-1
+     denominator), min, 25%, 50% (median), 75%, max.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.19 Examples
+.................
+
+(%i1) prices : ndarray([10.0, 20.0, 30.0, 40.0, 50.0])$
+(%i2) names : df_string_column(["A", "B", "C", "D", "E"])$
+(%i3) T : df_table(["name", "price"], [names, prices])$
+(%i4) df_describe(T);
+(%o4)              df_table: 8 rows x 2 cols
+(%i5) df_table_names(df_describe(T));
+(%o5)                    [stat, price]
+
+See also: ‘df_median’, ‘df_quantile’, ‘df_count’
 
 
 File: dataframes.info,  Node: Function and variable index,  Prev: Package dataframes,  Up: Top
@@ -491,7 +665,16 @@ Appendix A Function and variable index
  [index ]
 * Menu:
 
+* df_count:                              Function df_count col. (line 3)
+* df_describe:                           Function df_describe T.
+                                                                (line 3)
+* df_median:                             Function df_median col.
+                                                                (line 3)
 * df_ndarray_to_table:                   Function df_ndarray_to_table A names.
+                                                                (line 3)
+* df_nunique:                            Function df_nunique col.
+                                                                (line 3)
+* df_quantile:                           Function df_quantile col p.
                                                                 (line 3)
 * df_string_column:                      Function df_string_column list.
                                                                 (line 3)
@@ -516,6 +699,10 @@ Appendix A Function and variable index
                                                                 (line 3)
 * df_to_string_list:                     Function df_to_string_list col.
                                                                 (line 3)
+* df_unique:                             Function df_unique col.
+                                                                (line 3)
+* df_value_counts:                       Function df_value_counts col.
+                                                                (line 3)
 
 
 
@@ -539,47 +726,68 @@ Node: Definitions for dataframes3761
 Ref: #definitions-for-dataframes3967
 Node: String Columns3967
 Ref: #string-columns-14114
-Node: Function df_string_column list4842
-Ref: #function-df_string_column-list5004
-Node: Examples5155
-Ref: #examples5249
-Node: Function df_to_string_list col5572
-Ref: #function-df_to_string_list-col5772
-Ref: #examples-15899
-Node: Function df_string_column_p x6094
-Ref: #function-df_string_column_p-x6298
-Ref: #examples-26462
-Node: Function df_string_column_ref col i6734
-Ref: #function-df_string_column_ref-col-i6951
-Ref: #examples-37127
-Node: Function df_string_column_length col7443
-Ref: #function-df_string_column_length-col7662
-Ref: #examples-47781
-Node: Function df_table names columns8227
-Ref: #function-df_table-names-columns8438
-Ref: #examples-58758
-Node: Function df_table_column T name9269
-Ref: #function-df_table_column-t-name9469
-Ref: #examples-69715
-Node: Function df_table_shape T10158
-Ref: #function-df_table_shape-t10345
-Ref: #examples-710467
-Node: Function df_table_names T10689
-Ref: #function-df_table_names-t10889
-Ref: #examples-811022
-Node: Function df_table_head T / df_table_head T n11251
-Ref: #function-df_table_head-t-df_table_head-t-n11478
-Ref: #examples-911704
-Node: Function df_table_to_ndarray T12099
-Ref: #function-df_table_to_ndarray-t12320
-Ref: #examples-1012596
-Node: Function df_ndarray_to_table A names12910
-Ref: #function-df_ndarray_to_table-a-names13115
-Ref: #examples-1113398
-Node: Function df_table_p x13729
-Ref: #function-df_table_p-x13879
-Ref: #examples-1214037
-Node: Function and variable index14266
+Node: Function df_string_column list5041
+Ref: #function-df_string_column-list5203
+Node: Examples5354
+Ref: #examples5448
+Node: Function df_to_string_list col5771
+Ref: #function-df_to_string_list-col5971
+Ref: #examples-16098
+Node: Function df_string_column_p x6293
+Ref: #function-df_string_column_p-x6497
+Ref: #examples-26661
+Node: Function df_string_column_ref col i6933
+Ref: #function-df_string_column_ref-col-i7150
+Ref: #examples-37326
+Node: Function df_string_column_length col7642
+Ref: #function-df_string_column_length-col7861
+Ref: #examples-47980
+Node: Function df_table names columns8426
+Ref: #function-df_table-names-columns8637
+Ref: #examples-58957
+Node: Function df_table_column T name9468
+Ref: #function-df_table_column-t-name9668
+Ref: #examples-69914
+Node: Function df_table_shape T10357
+Ref: #function-df_table_shape-t10544
+Ref: #examples-710666
+Node: Function df_table_names T10888
+Ref: #function-df_table_names-t11088
+Ref: #examples-811221
+Node: Function df_table_head T / df_table_head T n11450
+Ref: #function-df_table_head-t-df_table_head-t-n11677
+Ref: #examples-911903
+Node: Function df_table_to_ndarray T12298
+Ref: #function-df_table_to_ndarray-t12519
+Ref: #examples-1012795
+Node: Function df_ndarray_to_table A names13109
+Ref: #function-df_ndarray_to_table-a-names13314
+Ref: #examples-1113597
+Node: Function df_table_p x13928
+Ref: #function-df_table_p-x14108
+Ref: #examples-1214266
+Node: Function df_count col14721
+Ref: #function-df_count-col14887
+Ref: #examples-1315047
+Node: Function df_median col15249
+Ref: #function-df_median-col15421
+Ref: #examples-1415592
+Node: Function df_quantile col p15800
+Ref: #function-df_quantile-col-p15978
+Ref: #examples-1516153
+Node: Function df_unique col16448
+Ref: #function-df_unique-col16622
+Ref: #examples-1616805
+Node: Function df_nunique col16990
+Ref: #function-df_nunique-col17167
+Ref: #examples-1717321
+Node: Function df_value_counts col17545
+Ref: #function-df_value_counts-col17727
+Ref: #examples-1817980
+Node: Function df_describe T18364
+Ref: #function-df_describe-t18508
+Ref: #examples-1918927
+Node: Function and variable index19305
 
 End Tag Table
 
