@@ -171,10 +171,26 @@ String-columns use *1-based indexing* (matching Maxima convention).
 * Function df_summarize T name1 fn1 name2 fn2 ...::
 * Function df_distinct T / df_distinct T cols::
 * Function df_group_by T col_name::
+* Function df_grouped_table_p x::
 * Function df_inner_join T1 T2 key::
 * Function df_left_join T1 T2 key::
 * Function df_bind_rows T1 T2::
 * Function df_bind_cols T1 T2::
+* Function df_read_csv path::
+* Function df_read_parquet path::
+* Function df_read_json path::
+* Function df_write_csv T path::
+* Function df_write_parquet T path::
+* Function df_sql query::
+* Function df_sql_run query::
+* Function df_register T name::
+* Function df_unregister name::
+* Function df_duckdb_filter T where_clause::
+* Function df_duckdb_arrange T column / df_duckdb_arrange T column descending::
+* Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left::
+* Function df_duckdb_group_summarize T group_col name1 expr1 ...::
+* Function df_duckdb_status ::
+* Function df_duckdb_close ::
 
 
 File: dataframes.info,  Node: Function df_string_column list,  Next: Function df_to_string_list col,  Up: String Columns
@@ -569,7 +585,7 @@ File: dataframes.info,  Node: Function df_quantile col p,  Next: Function df_uni
 (%i3) df_quantile(a, 0.5);
 (%o3)                         3.5
 (%i4) df_quantile(a, 0.75);
-(%o4)                         5.75
+(%o4)                         5.25
 
 See also: ‘df_median’, ‘df_describe’
 
@@ -847,7 +863,7 @@ See also: ‘df_filter’, ‘df_nunique’ ## Grouped Tables
 Group a table by a column for per-group aggregation with ‘df_summarize’.
 
 
-File: dataframes.info,  Node: Function df_group_by T col_name,  Next: Function df_inner_join T1 T2 key,  Prev: Function df_distinct T / df_distinct T cols,  Up: String Columns
+File: dataframes.info,  Node: Function df_group_by T col_name,  Next: Function df_grouped_table_p x,  Prev: Function df_distinct T / df_distinct T cols,  Up: String Columns
 
  -- Function: df_group_by (T, COL_NAME)
      Group a table by a column, returning a grouped table.  The grouped
@@ -871,12 +887,36 @@ File: dataframes.info,  Node: Function df_group_by T col_name,  Next: Function d
 The result table has the group-key column plus one column per summary
 function.
 
-See also: ‘df_summarize’, ‘df_describe’ ## Joins and Binds
+See also: ‘df_summarize’, ‘df_describe’, ‘df_grouped_table_p’
+
+
+File: dataframes.info,  Node: Function df_grouped_table_p x,  Next: Function df_inner_join T1 T2 key,  Prev: Function df_group_by T col_name,  Up: String Columns
+
+ -- Function: df_grouped_table_p (X)
+     Predicate: return ‘true’ if ‘x’ is a grouped table handle, ‘false’
+     otherwise.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.29 Examples
+.................
+
+(%i1) T : df_table(["region", "revenue"],
+                    [df_string_column(["N","S"]), ndarray([10.0, 20.0])])$
+(%i2) G : df_group_by(T, "region")$
+(%i3) df_grouped_table_p(G);
+(%o3)                         true
+(%i4) df_grouped_table_p(T);
+(%o4)                        false
+
+See also: ‘df_group_by’, ‘df_table_p’ ## Joins and Binds
 
 Combine tables by key columns (joins) or by stacking (binds).
 
 
-File: dataframes.info,  Node: Function df_inner_join T1 T2 key,  Next: Function df_left_join T1 T2 key,  Prev: Function df_group_by T col_name,  Up: String Columns
+File: dataframes.info,  Node: Function df_inner_join T1 T2 key,  Next: Function df_left_join T1 T2 key,  Prev: Function df_grouped_table_p x,  Up: String Columns
 
  -- Function: df_inner_join (T1, T2, KEY)
      Join two tables on a key column, keeping only rows with matching
@@ -886,7 +926,7 @@ File: dataframes.info,  Node: Function df_inner_join T1 T2 key,  Next: Function 
 
      * Examples::
 
-1.3.1.29 Examples
+1.3.1.30 Examples
 .................
 
 (%i1) T1 : df_table(["id", "name"],
@@ -912,7 +952,7 @@ File: dataframes.info,  Node: Function df_left_join T1 T2 key,  Next: Function d
 
      * Examples::
 
-1.3.1.30 Examples
+1.3.1.31 Examples
 .................
 
 (%i1) df_left_join(T1, T2, "id");
@@ -930,7 +970,7 @@ File: dataframes.info,  Node: Function df_bind_rows T1 T2,  Next: Function df_bi
 
      * Examples::
 
-1.3.1.31 Examples
+1.3.1.32 Examples
 .................
 
 (%i1) A : df_table(["x"], [ndarray([1.0, 2.0])])$
@@ -941,7 +981,7 @@ File: dataframes.info,  Node: Function df_bind_rows T1 T2,  Next: Function df_bi
 See also: ‘df_bind_cols’
 
 
-File: dataframes.info,  Node: Function df_bind_cols T1 T2,  Prev: Function df_bind_rows T1 T2,  Up: String Columns
+File: dataframes.info,  Node: Function df_bind_cols T1 T2,  Next: Function df_read_csv path,  Prev: Function df_bind_rows T1 T2,  Up: String Columns
 
  -- Function: df_bind_cols (T1, T2)
      Stack two tables horizontally.  Row counts must match and column
@@ -951,7 +991,7 @@ File: dataframes.info,  Node: Function df_bind_cols T1 T2,  Prev: Function df_bi
 
      * Examples::
 
-1.3.1.32 Examples
+1.3.1.33 Examples
 .................
 
 (%i1) X : df_table(["x"], [ndarray([1.0, 2.0])])$
@@ -959,7 +999,351 @@ File: dataframes.info,  Node: Function df_bind_cols T1 T2,  Prev: Function df_bi
 (%i3) df_table_names(df_bind_cols(X, Y));
 (%o3)                        [x, y]
 
-See also: ‘df_bind_rows’, ‘df_inner_join’
+See also: ‘df_bind_rows’, ‘df_inner_join’ ## DuckDB Integration
+
+The ‘dataframes-duckdb’ extension adds file I/O, SQL queries, and
+DuckDB-accelerated operations to the dataframes package.  It requires
+‘libduckdb’ (‘brew install duckdb’ on macOS).
+
+load("dataframes-duckdb")$
+
+*Type mapping:* DuckDB DOUBLE → ndarray (f64), INTEGER/BIGINT → ndarray
+(coerced to f64), VARCHAR → string-column, NULL → NaN (numeric) or “”
+(string).
+
+
+File: dataframes.info,  Node: Function df_read_csv path,  Next: Function df_read_parquet path,  Prev: Function df_bind_cols T1 T2,  Up: String Columns
+
+ -- Function: df_read_csv (PATH)
+     Read a CSV file into a df_table.  DuckDB auto-detects column types,
+     delimiters, and encoding.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.34 Examples
+.................
+
+(%i1) T : df_read_csv("/path/to/data.csv")$
+(%i2) df_table_shape(T);
+(%o2)                        [100, 5]
+(%i3) df_table_names(T);
+(%o3)           [id, name, price, qty, region]
+
+See also: ‘df_read_parquet’, ‘df_read_json’, ‘df_write_csv’
+
+
+File: dataframes.info,  Node: Function df_read_parquet path,  Next: Function df_read_json path,  Prev: Function df_read_csv path,  Up: String Columns
+
+ -- Function: df_read_parquet (PATH)
+     Read a Parquet file into a df_table.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.35 Examples
+.................
+
+(%i1) T : df_read_parquet("/path/to/data.parquet")$
+(%i2) df_table_shape(T);
+(%o2)                        [1000, 4]
+
+See also: ‘df_read_csv’, ‘df_write_parquet’
+
+
+File: dataframes.info,  Node: Function df_read_json path,  Next: Function df_write_csv T path,  Prev: Function df_read_parquet path,  Up: String Columns
+
+ -- Function: df_read_json (PATH)
+     Read a JSON file into a df_table.  DuckDB auto-detects the JSON
+     structure.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.36 Examples
+.................
+
+(%i1) T : df_read_json("/path/to/data.json")$
+(%i2) df_table_shape(T);
+(%o2)                        [50, 3]
+
+See also: ‘df_read_csv’, ‘df_read_parquet’
+
+
+File: dataframes.info,  Node: Function df_write_csv T path,  Next: Function df_write_parquet T path,  Prev: Function df_read_json path,  Up: String Columns
+
+ -- Function: df_write_csv (T, PATH)
+     Write a df_table to a CSV file with header row.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.37 Examples
+.................
+
+(%i1) T : df_table(["name", "score"],
+                    [df_string_column(["Alice", "Bob"]), ndarray([95.0, 87.0])])$
+(%i2) df_write_csv(T, "/tmp/output.csv");
+(%o2)                         done
+
+See also: ‘df_read_csv’, ‘df_write_parquet’
+
+
+File: dataframes.info,  Node: Function df_write_parquet T path,  Next: Function df_sql query,  Prev: Function df_write_csv T path,  Up: String Columns
+
+ -- Function: df_write_parquet (T, PATH)
+     Write a df_table to a Parquet file.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.38 Examples
+.................
+
+(%i1) df_write_parquet(T, "/tmp/output.parquet");
+(%o1)                         done
+
+See also: ‘df_read_parquet’, ‘df_write_csv’
+
+
+File: dataframes.info,  Node: Function df_sql query,  Next: Function df_sql_run query,  Prev: Function df_write_parquet T path,  Up: String Columns
+
+ -- Function: df_sql (QUERY)
+     Execute an SQL query via DuckDB and return the result as a
+     df_table.  DuckDB can read files directly in SQL. Registered tables
+     (via ‘df_register’) are available by name.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.39 Examples
+.................
+
+(%i1) T : df_sql("SELECT * FROM read_csv('data.csv') WHERE price > 10")$
+(%i2) df_table_shape(T);
+(%o2)                        [42, 5]
+(%i3) df_register(T, "sales")$
+(%i4) R : df_sql("SELECT region, sum(price) AS total FROM sales GROUP BY region")$
+(%i5) df_table_names(R);
+(%o5)                    [region, total]
+
+See also: ‘df_sql_run’, ‘df_register’
+
+
+File: dataframes.info,  Node: Function df_sql_run query,  Next: Function df_register T name,  Prev: Function df_sql query,  Up: String Columns
+
+ -- Function: df_sql_run (QUERY)
+     Execute a DuckDB SQL statement that produces no result (DDL,
+     INSERT, etc.).
+
+* Menu:
+
+     * Examples::
+
+1.3.1.40 Examples
+.................
+
+(%i1) df_sql_run("CREATE TABLE temp AS SELECT * FROM read_csv('data.csv')")$
+(%i2) T : df_sql("SELECT * FROM temp WHERE x > 0")$
+
+See also: ‘df_sql’
+
+
+File: dataframes.info,  Node: Function df_register T name,  Next: Function df_unregister name,  Prev: Function df_sql_run query,  Up: String Columns
+
+ -- Function: df_register (T, NAME)
+     Register a df_table as a DuckDB table, making it available for SQL
+     queries by name.  Re-registering the same name replaces the
+     previous registration.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.41 Examples
+.................
+
+(%i1) T : df_table(["x", "y"],
+                    [ndarray([1.0, 2.0, 3.0]), ndarray([10.0, 20.0, 30.0])])$
+(%i2) df_register(T, "mydata");
+(%o2)                         done
+(%i3) R : df_sql("SELECT * FROM mydata WHERE x > 1")$
+(%i4) df_table_shape(R);
+(%o4)                        [2, 2]
+
+See also: ‘df_unregister’, ‘df_sql’
+
+
+File: dataframes.info,  Node: Function df_unregister name,  Next: Function df_duckdb_filter T where_clause,  Prev: Function df_register T name,  Up: String Columns
+
+ -- Function: df_unregister (NAME)
+     Remove a previously registered DuckDB table.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.42 Examples
+.................
+
+(%i1) df_unregister("mydata");
+(%o1)                         done
+
+See also: ‘df_register’
+
+
+File: dataframes.info,  Node: Function df_duckdb_filter T where_clause,  Next: Function df_duckdb_arrange T column / df_duckdb_arrange T column descending,  Prev: Function df_unregister name,  Up: String Columns
+
+ -- Function: df_duckdb_filter (T, WHERE_CLAUSE)
+     Filter table rows using a DuckDB SQL WHERE clause.  Faster than
+     ‘df_filter’ for large tables.  Accepts SQL expressions, not Maxima
+     lambdas.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.43 Examples
+.................
+
+(%i1) T : df_table(["name", "price"],
+                    [df_string_column(["A", "B", "C"]), ndarray([10.0, 30.0, 20.0])])$
+(%i2) T2 : df_duckdb_filter(T, "price > 15")$
+(%i3) df_table_shape(T2);
+(%o3)                        [2, 2]
+(%i4) df_duckdb_filter(T, "price > 15 AND name = 'B'")$
+
+See also: ‘df_filter’, ‘df_duckdb_arrange’
+
+
+File: dataframes.info,  Node: Function df_duckdb_arrange T column / df_duckdb_arrange T column descending,  Next: Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left,  Prev: Function df_duckdb_filter T where_clause,  Up: String Columns
+
+ -- Function: df_duckdb_arrange (T, COLUMN) / DF_DUCKDB_ARRANGE (T,
+          COLUMN, DESCENDING)
+     Sort table rows using DuckDB. Ascending by default; pass
+     ‘descending’ for reverse order.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.44 Examples
+.................
+
+(%i1) T2 : df_duckdb_arrange(T, "price")$
+(%i2) df_to_string_list(df_table_column(T2, "name"));
+(%o2)                      [A, C, B]
+(%i3) T3 : df_duckdb_arrange(T, "price", descending)$
+(%i4) df_to_string_list(df_table_column(T3, "name"));
+(%o4)                      [B, C, A]
+
+See also: ‘df_arrange’, ‘df_duckdb_filter’
+
+
+File: dataframes.info,  Node: Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left,  Next: Function df_duckdb_group_summarize T group_col name1 expr1 ...,  Prev: Function df_duckdb_arrange T column / df_duckdb_arrange T column descending,  Up: String Columns
+
+ -- Function: df_duckdb_join (T1, T2, KEY) / DF_DUCKDB_JOIN (T1, T2,
+          KEY, LEFT)
+     Join two tables using DuckDB. Inner join by default; pass ‘left’
+     for a left join.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.45 Examples
+.................
+
+(%i1) T1 : df_table(["id", "name"],
+                     [df_string_column(["1", "2", "3"]),
+                      df_string_column(["Alice", "Bob", "Charlie"])])$
+(%i2) T2 : df_table(["id", "score"],
+                     [df_string_column(["1", "2"]), ndarray([90.0, 80.0])])$
+(%i3) df_table_shape(df_duckdb_join(T1, T2, "id"));
+(%o3)                        [2, 3]
+(%i4) df_table_shape(df_duckdb_join(T1, T2, "id", left));
+(%o4)                        [3, 3]
+
+See also: ‘df_inner_join’, ‘df_left_join’
+
+
+File: dataframes.info,  Node: Function df_duckdb_group_summarize T group_col name1 expr1 ...,  Next: Function df_duckdb_status,  Prev: Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left,  Up: String Columns
+
+ -- Function: df_duckdb_group_summarize (T, GROUP_COL, NAME1, EXPR1,
+          ...)
+     Group and aggregate using DuckDB SQL. Takes alternating result-name
+     / SQL-expression string pairs.  Much faster than ‘df_group_by’ +
+     ‘df_summarize’ for large tables.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.46 Examples
+.................
+
+(%i1) T : df_table(["region", "revenue"],
+                    [df_string_column(["N", "S", "N", "S", "N"]),
+                     ndarray([10.0, 20.0, 30.0, 40.0, 50.0])])$
+(%i2) R : df_duckdb_group_summarize(T, "region",
+             "total", "sum(revenue)",
+             "avg_rev", "avg(revenue)",
+             "n", "count(*)")$
+(%i3) df_table_shape(R);
+(%o3)                        [2, 4]
+(%i4) df_table_names(R);
+(%o4)              [region, total, avg_rev, n]
+
+See also: ‘df_group_by’, ‘df_summarize’
+
+
+File: dataframes.info,  Node: Function df_duckdb_status,  Next: Function df_duckdb_close,  Prev: Function df_duckdb_group_summarize T group_col name1 expr1 ...,  Up: String Columns
+
+ -- Function: df_duckdb_status ()
+     Report whether the DuckDB connection is active.  Returns ‘true’ or
+     ‘false’.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.47 Examples
+.................
+
+(%i1) df_duckdb_status();
+(%o1)                        false
+(%i2) df_sql("SELECT 1")$
+(%i3) df_duckdb_status();
+(%o3)                         true
+
+See also: ‘df_duckdb_close’
+
+
+File: dataframes.info,  Node: Function df_duckdb_close,  Prev: Function df_duckdb_status,  Up: String Columns
+
+ -- Function: df_duckdb_close ()
+     Close the session DuckDB connection and database.  The connection
+     is automatically re-created on the next DuckDB operation.
+
+* Menu:
+
+     * Examples::
+
+1.3.1.48 Examples
+.................
+
+(%i1) df_duckdb_close();
+(%o1)                         done
+(%i2) df_duckdb_status();
+(%o2)                        false
+
+See also: ‘df_duckdb_status’
 
 
 File: dataframes.info,  Node: Function and variable index,  Prev: Package dataframes,  Up: Top
@@ -981,9 +1365,23 @@ Appendix A Function and variable index
                                                                 (line 3)
 * df_distinct:                           Function df_distinct T / df_distinct T cols.
                                                                 (line 3)
+* df_duckdb_arrange:                     Function df_duckdb_arrange T column / df_duckdb_arrange T column descending.
+                                                                (line 3)
+* df_duckdb_close:                       Function df_duckdb_close.
+                                                                (line 3)
+* df_duckdb_filter:                      Function df_duckdb_filter T where_clause.
+                                                                (line 3)
+* df_duckdb_group_summarize:             Function df_duckdb_group_summarize T group_col name1 expr1 ....
+                                                                (line 3)
+* df_duckdb_join:                        Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left.
+                                                                (line 3)
+* df_duckdb_status:                      Function df_duckdb_status.
+                                                                (line 3)
 * df_filter:                             Function df_filter T pred.
                                                                 (line 3)
 * df_group_by:                           Function df_group_by T col_name.
+                                                                (line 3)
+* df_grouped_table_p:                    Function df_grouped_table_p x.
                                                                 (line 3)
 * df_inner_join:                         Function df_inner_join T1 T2 key.
                                                                 (line 3)
@@ -999,11 +1397,22 @@ Appendix A Function and variable index
                                                                 (line 3)
 * df_quantile:                           Function df_quantile col p.
                                                                 (line 3)
+* df_read_csv:                           Function df_read_csv path.
+                                                                (line 3)
+* df_read_json:                          Function df_read_json path.
+                                                                (line 3)
+* df_read_parquet:                       Function df_read_parquet path.
+                                                                (line 3)
+* df_register:                           Function df_register T name.
+                                                                (line 3)
 * df_rename:                             Function df_rename T old_name new_name.
                                                                 (line 3)
 * df_select:                             Function df_select T names.
                                                                 (line 3)
 * df_slice:                              Function df_slice T indices.
+                                                                (line 3)
+* df_sql:                                Function df_sql query. (line 3)
+* df_sql_run:                            Function df_sql_run query.
                                                                 (line 3)
 * df_string_column:                      Function df_string_column list.
                                                                 (line 3)
@@ -1032,7 +1441,13 @@ Appendix A Function and variable index
                                                                 (line 3)
 * df_unique:                             Function df_unique col.
                                                                 (line 3)
+* df_unregister:                         Function df_unregister name.
+                                                                (line 3)
 * df_value_counts:                       Function df_value_counts col.
+                                                                (line 3)
+* df_write_csv:                          Function df_write_csv T path.
+                                                                (line 3)
+* df_write_parquet:                      Function df_write_parquet T path.
                                                                 (line 3)
 
 
@@ -1057,107 +1472,155 @@ Node: Definitions for dataframes3761
 Ref: #definitions-for-dataframes3967
 Node: String Columns3967
 Ref: #string-columns-14114
-Node: Function df_string_column list5559
-Ref: #function-df_string_column-list5721
-Node: Examples5872
-Ref: #examples5966
-Node: Function df_to_string_list col6289
-Ref: #function-df_to_string_list-col6489
-Ref: #examples-16616
-Node: Function df_string_column_p x6811
-Ref: #function-df_string_column_p-x7015
-Ref: #examples-27179
-Node: Function df_string_column_ref col i7451
-Ref: #function-df_string_column_ref-col-i7668
-Ref: #examples-37844
-Node: Function df_string_column_length col8160
-Ref: #function-df_string_column_length-col8379
-Ref: #examples-48498
-Node: Function df_table names columns8944
-Ref: #function-df_table-names-columns9155
-Ref: #examples-59475
-Node: Function df_table_column T name9986
-Ref: #function-df_table_column-t-name10186
-Ref: #examples-610432
-Node: Function df_table_shape T10875
-Ref: #function-df_table_shape-t11062
-Ref: #examples-711184
-Node: Function df_table_names T11406
-Ref: #function-df_table_names-t11606
-Ref: #examples-811739
-Node: Function df_table_head T / df_table_head T n11968
-Ref: #function-df_table_head-t-df_table_head-t-n12195
-Ref: #examples-912421
-Node: Function df_table_to_ndarray T12816
-Ref: #function-df_table_to_ndarray-t13037
-Ref: #examples-1013313
-Node: Function df_ndarray_to_table A names13627
-Ref: #function-df_ndarray_to_table-a-names13832
-Ref: #examples-1114115
-Node: Function df_table_p x14446
-Ref: #function-df_table_p-x14626
-Ref: #examples-1214784
-Node: Function df_count col15239
-Ref: #function-df_count-col15405
-Ref: #examples-1315565
-Node: Function df_median col15767
-Ref: #function-df_median-col15939
-Ref: #examples-1416110
-Node: Function df_quantile col p16318
-Ref: #function-df_quantile-col-p16496
-Ref: #examples-1516671
-Node: Function df_unique col16966
-Ref: #function-df_unique-col17140
-Ref: #examples-1617323
-Node: Function df_nunique col17508
-Ref: #function-df_nunique-col17685
-Ref: #examples-1717839
-Node: Function df_value_counts col18063
-Ref: #function-df_value_counts-col18245
-Ref: #examples-1818498
-Node: Function df_describe T18882
-Ref: #function-df_describe-t19060
-Ref: #examples-1919479
-Node: Function df_filter T pred20100
-Ref: #function-df_filter-t-pred20280
-Ref: #examples-2020464
-Node: Function df_select T names20848
-Ref: #function-df_select-t-names21072
-Ref: #examples-2121182
-Node: Function df_arrange T col_name / df_arrange T col_name descending21396
-Ref: #function-df_arrange-t-col_name-df_arrange-t-col_name-descending21675
-Ref: #examples-2221883
-Node: Function df_slice T indices22095
-Ref: #function-df_slice-t-indices22334
-Ref: #examples-2322442
-Node: Function df_rename T old_name new_name22585
-Ref: #function-df_rename-t-old_name-new_name22805
-Ref: #examples-2422893
-Node: Function df_mutate T col_name pred23028
-Ref: #function-df_mutate-t-col_name-pred23264
-Ref: #examples-2523505
-Node: Function df_summarize T name1 fn1 name2 fn2 ...23774
-Ref: #function-df_summarize-t-name1-fn1-name2-fn224031
-Ref: #examples-2624385
-Node: Function df_distinct T / df_distinct T cols24622
-Ref: #function-df_distinct-t-df_distinct-t-cols24870
-Ref: #examples-2725028
-Node: Function df_group_by T col_name25310
-Ref: #function-df_group_by-t-col_name25529
-Ref: #examples-2825757
-Node: Function df_inner_join T1 T2 key26277
-Ref: #function-df_inner_join-t1-t2-key26486
-Ref: #examples-2926648
-Node: Function df_left_join T1 T2 key27074
-Ref: #function-df_left_join-t1-t2-key27278
-Ref: #examples-3027503
-Node: Function df_bind_rows T1 T227614
-Ref: #function-df_bind_rows-t1-t227808
-Ref: #examples-3127942
-Node: Function df_bind_cols T1 T228151
-Ref: #function-df_bind_cols-t1-t228305
-Ref: #examples-3228470
-Node: Function and variable index28700
+Node: Function df_string_column list6201
+Ref: #function-df_string_column-list6363
+Node: Examples6514
+Ref: #examples6608
+Node: Function df_to_string_list col6931
+Ref: #function-df_to_string_list-col7131
+Ref: #examples-17258
+Node: Function df_string_column_p x7453
+Ref: #function-df_string_column_p-x7657
+Ref: #examples-27821
+Node: Function df_string_column_ref col i8093
+Ref: #function-df_string_column_ref-col-i8310
+Ref: #examples-38486
+Node: Function df_string_column_length col8802
+Ref: #function-df_string_column_length-col9021
+Ref: #examples-49140
+Node: Function df_table names columns9586
+Ref: #function-df_table-names-columns9797
+Ref: #examples-510117
+Node: Function df_table_column T name10628
+Ref: #function-df_table_column-t-name10828
+Ref: #examples-611074
+Node: Function df_table_shape T11517
+Ref: #function-df_table_shape-t11704
+Ref: #examples-711826
+Node: Function df_table_names T12048
+Ref: #function-df_table_names-t12248
+Ref: #examples-812381
+Node: Function df_table_head T / df_table_head T n12610
+Ref: #function-df_table_head-t-df_table_head-t-n12837
+Ref: #examples-913063
+Node: Function df_table_to_ndarray T13458
+Ref: #function-df_table_to_ndarray-t13679
+Ref: #examples-1013955
+Node: Function df_ndarray_to_table A names14269
+Ref: #function-df_ndarray_to_table-a-names14474
+Ref: #examples-1114757
+Node: Function df_table_p x15088
+Ref: #function-df_table_p-x15268
+Ref: #examples-1215426
+Node: Function df_count col15881
+Ref: #function-df_count-col16047
+Ref: #examples-1316207
+Node: Function df_median col16409
+Ref: #function-df_median-col16581
+Ref: #examples-1416752
+Node: Function df_quantile col p16960
+Ref: #function-df_quantile-col-p17138
+Ref: #examples-1517313
+Node: Function df_unique col17608
+Ref: #function-df_unique-col17782
+Ref: #examples-1617965
+Node: Function df_nunique col18150
+Ref: #function-df_nunique-col18327
+Ref: #examples-1718481
+Node: Function df_value_counts col18705
+Ref: #function-df_value_counts-col18887
+Ref: #examples-1819140
+Node: Function df_describe T19524
+Ref: #function-df_describe-t19702
+Ref: #examples-1920121
+Node: Function df_filter T pred20742
+Ref: #function-df_filter-t-pred20922
+Ref: #examples-2021106
+Node: Function df_select T names21490
+Ref: #function-df_select-t-names21714
+Ref: #examples-2121824
+Node: Function df_arrange T col_name / df_arrange T col_name descending22038
+Ref: #function-df_arrange-t-col_name-df_arrange-t-col_name-descending22317
+Ref: #examples-2222525
+Node: Function df_slice T indices22737
+Ref: #function-df_slice-t-indices22976
+Ref: #examples-2323084
+Node: Function df_rename T old_name new_name23227
+Ref: #function-df_rename-t-old_name-new_name23447
+Ref: #examples-2423535
+Node: Function df_mutate T col_name pred23670
+Ref: #function-df_mutate-t-col_name-pred23906
+Ref: #examples-2524147
+Node: Function df_summarize T name1 fn1 name2 fn2 ...24416
+Ref: #function-df_summarize-t-name1-fn1-name2-fn224673
+Ref: #examples-2625027
+Node: Function df_distinct T / df_distinct T cols25264
+Ref: #function-df_distinct-t-df_distinct-t-cols25512
+Ref: #examples-2725670
+Node: Function df_group_by T col_name25952
+Ref: #function-df_group_by-t-col_name26168
+Ref: #examples-2826396
+Node: Function df_grouped_table_p x26860
+Ref: #function-df_grouped_table_p-x27062
+Ref: #examples-2927228
+Node: Function df_inner_join T1 T2 key27639
+Ref: #function-df_inner_join-t1-t2-key27846
+Ref: #examples-3028008
+Node: Function df_left_join T1 T2 key28434
+Ref: #function-df_left_join-t1-t2-key28638
+Ref: #examples-3128863
+Node: Function df_bind_rows T1 T228974
+Ref: #function-df_bind_rows-t1-t229168
+Ref: #examples-3229302
+Node: Function df_bind_cols T1 T229511
+Ref: #function-df_bind_cols-t1-t229699
+Ref: #examples-3329864
+Node: Function df_read_csv path30504
+Ref: #function-df_read_csv-path30691
+Ref: #examples-3430861
+Node: Function df_read_parquet path31114
+Ref: #function-df_read_parquet-path31304
+Ref: #examples-3531412
+Node: Function df_read_json path31582
+Ref: #function-df_read_json-path31772
+Ref: #examples-3631923
+Node: Function df_write_csv T path32084
+Ref: #function-df_write_csv-t-path32280
+Ref: #examples-3732399
+Node: Function df_write_parquet T path32650
+Ref: #function-df_write_parquet-t-path32845
+Ref: #examples-3832952
+Node: Function df_sql query33091
+Ref: #function-df_sql-query33271
+Ref: #examples-3933526
+Node: Function df_sql_run query33889
+Ref: #function-df_sql_run-query34068
+Ref: #examples-4034220
+Node: Function df_register T name34374
+Ref: #function-df_register-t-name34562
+Ref: #examples-4134793
+Node: Function df_unregister name35130
+Ref: #function-df_unregister-name35332
+Ref: #examples-4235448
+Node: Function df_duckdb_filter T where_clause35544
+Ref: #function-df_duckdb_filter-t-where_clause35808
+Ref: #examples-4336033
+Node: Function df_duckdb_arrange T column / df_duckdb_arrange T column descending36375
+Ref: #function-df_duckdb_arrange-t-column-df_duckdb_arrange-t-column-descending36726
+Ref: #examples-4436895
+Node: Function df_duckdb_join T1 T2 key / df_duckdb_join T1 T2 key left37226
+Ref: #function-df_duckdb_join-t1-t2-key-df_duckdb_join-t1-t2-key-left37591
+Ref: #examples-4537753
+Node: Function df_duckdb_group_summarize T group_col name1 expr1 ...38265
+Ref: #function-df_duckdb_group_summarize-t-group_col-name1-expr138574
+Ref: #examples-4638829
+Node: Function df_duckdb_status39342
+Ref: #function-df_duckdb_status39560
+Ref: #examples-4739720
+Node: Function df_duckdb_close39902
+Ref: #function-df_duckdb_close40048
+Ref: #examples-4840248
+Node: Function and variable index40404
 
 End Tag Table
 

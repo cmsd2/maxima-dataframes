@@ -153,6 +153,166 @@
       ],
       "section": "Table Manipulation"
     },
+    "df_duckdb_arrange": {
+      "type": "Function",
+      "signature": "df_duckdb_arrange(T, column) / df_duckdb_arrange (T, column, descending)",
+      "summary": "Sort table rows using DuckDB. Ascending by default; pass descending for reverse order.",
+      "body_md": "Sort table rows using DuckDB. Ascending by default; pass `descending` for reverse order.\n\n#### Examples\n\n```maxima\n(%i1) T2 : df_duckdb_arrange(T, \"price\")$\n(%i2) df_to_string_list(df_table_column(T2, \"name\"));\n(%o2)                      [A, C, B]\n(%i3) T3 : df_duckdb_arrange(T, \"price\", descending)$\n(%i4) df_to_string_list(df_table_column(T3, \"name\"));\n(%o4)                      [B, C, A]\n```\n\nSee also: `df_arrange`, `df_duckdb_filter`",
+      "examples": [
+        {
+          "input": "T2 : df_duckdb_arrange(T, \"price\")$",
+          "output": ""
+        },
+        {
+          "input": "df_to_string_list(df_table_column(T2, \"name\"));",
+          "output": "[A, C, B]"
+        },
+        {
+          "input": "T3 : df_duckdb_arrange(T, \"price\", descending)$",
+          "output": ""
+        },
+        {
+          "input": "df_to_string_list(df_table_column(T3, \"name\"));",
+          "output": "[B, C, A]"
+        }
+      ],
+      "see_also": [
+        "df_arrange",
+        "df_duckdb_filter"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_duckdb_close": {
+      "type": "Function",
+      "signature": "df_duckdb_close()",
+      "summary": "Close the session DuckDB connection and database. The connection is automatically re-created on the next DuckDB operation.",
+      "body_md": "Close the session DuckDB connection and database. The connection is automatically re-created on the next DuckDB operation.\n\n#### Examples\n\n```maxima\n(%i1) df_duckdb_close();\n(%o1)                         done\n(%i2) df_duckdb_status();\n(%o2)                        false\n```\n\nSee also: `df_duckdb_status`",
+      "examples": [
+        {
+          "input": "df_duckdb_close();",
+          "output": "done"
+        },
+        {
+          "input": "df_duckdb_status();",
+          "output": "false"
+        }
+      ],
+      "see_also": [
+        "df_duckdb_status"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_duckdb_filter": {
+      "type": "Function",
+      "signature": "df_duckdb_filter(T, where_clause)",
+      "summary": "Filter table rows using a DuckDB SQL WHERE clause. Faster than df_filter for large tables. Accepts SQL expressions, not Maxima lambdas.",
+      "body_md": "Filter table rows using a DuckDB SQL WHERE clause. Faster than `df_filter` for large tables. Accepts SQL expressions, not Maxima lambdas.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"name\", \"price\"],\n                    [df_string_column([\"A\", \"B\", \"C\"]), ndarray([10.0, 30.0, 20.0])])$\n(%i2) T2 : df_duckdb_filter(T, \"price > 15\")$\n(%i3) df_table_shape(T2);\n(%o3)                        [2, 2]\n(%i4) df_duckdb_filter(T, \"price > 15 AND name = 'B'\")$\n```\n\nSee also: `df_filter`, `df_duckdb_arrange`",
+      "examples": [
+        {
+          "input": "T : df_table([\"name\", \"price\"],\n                    [df_string_column([\"A\", \"B\", \"C\"]), ndarray([10.0, 30.0, 20.0])])$",
+          "output": ""
+        },
+        {
+          "input": "T2 : df_duckdb_filter(T, \"price > 15\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T2);",
+          "output": "[2, 2]"
+        },
+        {
+          "input": "df_duckdb_filter(T, \"price > 15 AND name = 'B'\")$",
+          "output": ""
+        }
+      ],
+      "see_also": [
+        "df_filter",
+        "df_duckdb_arrange"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_duckdb_group_summarize": {
+      "type": "Function",
+      "signature": "df_duckdb_group_summarize(T, group_col, name1, expr1, ...)",
+      "summary": "Group and aggregate using DuckDB SQL. Takes alternating result-name / SQL-expression string pairs. Much faster than df_group_by + df_summarize for large tables.",
+      "body_md": "Group and aggregate using DuckDB SQL. Takes alternating result-name / SQL-expression string pairs. Much faster than `df_group_by` + `df_summarize` for large tables.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\", \"S\", \"N\", \"S\", \"N\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0, 50.0])])$\n(%i2) R : df_duckdb_group_summarize(T, \"region\",\n             \"total\", \"sum(revenue)\",\n             \"avg_rev\", \"avg(revenue)\",\n             \"n\", \"count(*)\")$\n(%i3) df_table_shape(R);\n(%o3)                        [2, 4]\n(%i4) df_table_names(R);\n(%o4)              [region, total, avg_rev, n]\n```\n\nSee also: `df_group_by`, `df_summarize`",
+      "examples": [
+        {
+          "input": "T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\", \"S\", \"N\", \"S\", \"N\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0, 50.0])])$",
+          "output": ""
+        },
+        {
+          "input": "R : df_duckdb_group_summarize(T, \"region\",\n             \"total\", \"sum(revenue)\",\n             \"avg_rev\", \"avg(revenue)\",\n             \"n\", \"count(*)\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(R);",
+          "output": "[2, 4]"
+        },
+        {
+          "input": "df_table_names(R);",
+          "output": "[region, total, avg_rev, n]"
+        }
+      ],
+      "see_also": [
+        "df_group_by",
+        "df_summarize"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_duckdb_join": {
+      "type": "Function",
+      "signature": "df_duckdb_join(T1, T2, key) / df_duckdb_join (T1, T2, key, left)",
+      "summary": "Join two tables using DuckDB. Inner join by default; pass left for a left join.",
+      "body_md": "Join two tables using DuckDB. Inner join by default; pass `left` for a left join.\n\n#### Examples\n\n```maxima\n(%i1) T1 : df_table([\"id\", \"name\"],\n                     [df_string_column([\"1\", \"2\", \"3\"]),\n                      df_string_column([\"Alice\", \"Bob\", \"Charlie\"])])$\n(%i2) T2 : df_table([\"id\", \"score\"],\n                     [df_string_column([\"1\", \"2\"]), ndarray([90.0, 80.0])])$\n(%i3) df_table_shape(df_duckdb_join(T1, T2, \"id\"));\n(%o3)                        [2, 3]\n(%i4) df_table_shape(df_duckdb_join(T1, T2, \"id\", left));\n(%o4)                        [3, 3]\n```\n\nSee also: `df_inner_join`, `df_left_join`",
+      "examples": [
+        {
+          "input": "T1 : df_table([\"id\", \"name\"],\n                     [df_string_column([\"1\", \"2\", \"3\"]),\n                      df_string_column([\"Alice\", \"Bob\", \"Charlie\"])])$",
+          "output": ""
+        },
+        {
+          "input": "T2 : df_table([\"id\", \"score\"],\n                     [df_string_column([\"1\", \"2\"]), ndarray([90.0, 80.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(df_duckdb_join(T1, T2, \"id\"));",
+          "output": "[2, 3]"
+        },
+        {
+          "input": "df_table_shape(df_duckdb_join(T1, T2, \"id\", left));",
+          "output": "[3, 3]"
+        }
+      ],
+      "see_also": [
+        "df_inner_join",
+        "df_left_join"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_duckdb_status": {
+      "type": "Function",
+      "signature": "df_duckdb_status()",
+      "summary": "Report whether the DuckDB connection is active. Returns true or false.",
+      "body_md": "Report whether the DuckDB connection is active. Returns `true` or `false`.\n\n#### Examples\n\n```maxima\n(%i1) df_duckdb_status();\n(%o1)                        false\n(%i2) df_sql(\"SELECT 1\")$\n(%i3) df_duckdb_status();\n(%o3)                         true\n```\n\nSee also: `df_duckdb_close`",
+      "examples": [
+        {
+          "input": "df_duckdb_status();",
+          "output": "false"
+        },
+        {
+          "input": "df_sql(\"SELECT 1\")$",
+          "output": ""
+        },
+        {
+          "input": "df_duckdb_status();",
+          "output": "true"
+        }
+      ],
+      "see_also": [
+        "df_duckdb_close"
+      ],
+      "section": "DuckDB Integration"
+    },
     "df_filter": {
       "type": "Function",
       "signature": "df_filter(T, pred)",
@@ -182,7 +342,7 @@
       "type": "Function",
       "signature": "df_group_by(T, col_name)",
       "summary": "Group a table by a column, returning a grouped table. The grouped table can then be passed to df_summarize to compute per-group statistics.",
-      "body_md": "Group a table by a column, returning a grouped table. The grouped table can then be passed to `df_summarize` to compute per-group statistics.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\",\"N\",\"S\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0])])$\n(%i2) G : df_group_by(T, \"region\")$\n(%i3) df_summarize(G, \"total\", lambda([revenue], np_sum(revenue)));\n(%o3)              df_table: 2 rows x 2 cols\n```\n\nThe result table has the group-key column plus one column per summary function.\n\nSee also: `df_summarize`, `df_describe`",
+      "body_md": "Group a table by a column, returning a grouped table. The grouped table can then be passed to `df_summarize` to compute per-group statistics.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\",\"N\",\"S\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0])])$\n(%i2) G : df_group_by(T, \"region\")$\n(%i3) df_summarize(G, \"total\", lambda([revenue], np_sum(revenue)));\n(%o3)              df_table: 2 rows x 2 cols\n```\n\nThe result table has the group-key column plus one column per summary function.\n\nSee also: `df_summarize`, `df_describe`, `df_grouped_table_p`",
       "examples": [
         {
           "input": "T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\",\"N\",\"S\"]),\n                     ndarray([10.0, 20.0, 30.0, 40.0])])$",
@@ -199,7 +359,37 @@
       ],
       "see_also": [
         "df_summarize",
-        "df_describe"
+        "df_describe",
+        "df_grouped_table_p"
+      ],
+      "section": "Grouped Tables"
+    },
+    "df_grouped_table_p": {
+      "type": "Function",
+      "signature": "df_grouped_table_p(x)",
+      "summary": "Predicate: return true if x is a grouped table handle, false otherwise.",
+      "body_md": "Predicate: return `true` if `x` is a grouped table handle, `false` otherwise.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\"]), ndarray([10.0, 20.0])])$\n(%i2) G : df_group_by(T, \"region\")$\n(%i3) df_grouped_table_p(G);\n(%o3)                         true\n(%i4) df_grouped_table_p(T);\n(%o4)                        false\n```\n\nSee also: `df_group_by`, `df_table_p`",
+      "examples": [
+        {
+          "input": "T : df_table([\"region\", \"revenue\"],\n                    [df_string_column([\"N\",\"S\"]), ndarray([10.0, 20.0])])$",
+          "output": ""
+        },
+        {
+          "input": "G : df_group_by(T, \"region\")$",
+          "output": ""
+        },
+        {
+          "input": "df_grouped_table_p(G);",
+          "output": "true"
+        },
+        {
+          "input": "df_grouped_table_p(T);",
+          "output": "false"
+        }
+      ],
+      "see_also": [
+        "df_group_by",
+        "df_table_p"
       ],
       "section": "Grouped Tables"
     },
@@ -348,7 +538,7 @@
       "type": "Function",
       "signature": "df_quantile(col, p)",
       "summary": "Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumPy default method).",
-      "body_md": "Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumPy default method).\n\n#### Examples\n\n```maxima\n(%i1) a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$\n(%i2) df_quantile(a, 0.25);\n(%o2)                         1.75\n(%i3) df_quantile(a, 0.5);\n(%o3)                         3.5\n(%i4) df_quantile(a, 0.75);\n(%o4)                         5.75\n```\n\nSee also: `df_median`, `df_describe`",
+      "body_md": "Compute the p-quantile (0 to 1) of a 1D ndarray using linear interpolation (NumPy default method).\n\n#### Examples\n\n```maxima\n(%i1) a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$\n(%i2) df_quantile(a, 0.25);\n(%o2)                         1.75\n(%i3) df_quantile(a, 0.5);\n(%o3)                         3.5\n(%i4) df_quantile(a, 0.75);\n(%o4)                         5.25\n```\n\nSee also: `df_median`, `df_describe`",
       "examples": [
         {
           "input": "a : ndarray([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0])$",
@@ -364,7 +554,7 @@
         },
         {
           "input": "df_quantile(a, 0.75);",
-          "output": "5.75"
+          "output": "5.25"
         }
       ],
       "see_also": [
@@ -372,6 +562,103 @@
         "df_describe"
       ],
       "section": "Column Aggregation and Describe"
+    },
+    "df_read_csv": {
+      "type": "Function",
+      "signature": "df_read_csv(path)",
+      "summary": "Read a CSV file into a df_table. DuckDB auto-detects column types, delimiters, and encoding.",
+      "body_md": "Read a CSV file into a df_table. DuckDB auto-detects column types, delimiters, and encoding.\n\n#### Examples\n\n```maxima\n(%i1) T : df_read_csv(\"/path/to/data.csv\")$\n(%i2) df_table_shape(T);\n(%o2)                        [100, 5]\n(%i3) df_table_names(T);\n(%o3)           [id, name, price, qty, region]\n```\n\nSee also: `df_read_parquet`, `df_read_json`, `df_write_csv`",
+      "examples": [
+        {
+          "input": "T : df_read_csv(\"/path/to/data.csv\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[100, 5]"
+        },
+        {
+          "input": "df_table_names(T);",
+          "output": "[id, name, price, qty, region]"
+        }
+      ],
+      "see_also": [
+        "df_read_parquet",
+        "df_read_json",
+        "df_write_csv"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_read_json": {
+      "type": "Function",
+      "signature": "df_read_json(path)",
+      "summary": "Read a JSON file into a df_table. DuckDB auto-detects the JSON structure.",
+      "body_md": "Read a JSON file into a df_table. DuckDB auto-detects the JSON structure.\n\n#### Examples\n\n```maxima\n(%i1) T : df_read_json(\"/path/to/data.json\")$\n(%i2) df_table_shape(T);\n(%o2)                        [50, 3]\n```\n\nSee also: `df_read_csv`, `df_read_parquet`",
+      "examples": [
+        {
+          "input": "T : df_read_json(\"/path/to/data.json\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[50, 3]"
+        }
+      ],
+      "see_also": [
+        "df_read_csv",
+        "df_read_parquet"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_read_parquet": {
+      "type": "Function",
+      "signature": "df_read_parquet(path)",
+      "summary": "Read a Parquet file into a df_table.",
+      "body_md": "Read a Parquet file into a df_table.\n\n#### Examples\n\n```maxima\n(%i1) T : df_read_parquet(\"/path/to/data.parquet\")$\n(%i2) df_table_shape(T);\n(%o2)                        [1000, 4]\n```\n\nSee also: `df_read_csv`, `df_write_parquet`",
+      "examples": [
+        {
+          "input": "T : df_read_parquet(\"/path/to/data.parquet\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[1000, 4]"
+        }
+      ],
+      "see_also": [
+        "df_read_csv",
+        "df_write_parquet"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_register": {
+      "type": "Function",
+      "signature": "df_register(T, name)",
+      "summary": "Register a df_table as a DuckDB table, making it available for SQL queries by name. Re-registering the same name replaces the previous registration.",
+      "body_md": "Register a df_table as a DuckDB table, making it available for SQL queries by name. Re-registering the same name replaces the previous registration.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"x\", \"y\"],\n                    [ndarray([1.0, 2.0, 3.0]), ndarray([10.0, 20.0, 30.0])])$\n(%i2) df_register(T, \"mydata\");\n(%o2)                         done\n(%i3) R : df_sql(\"SELECT * FROM mydata WHERE x > 1\")$\n(%i4) df_table_shape(R);\n(%o4)                        [2, 2]\n```\n\nSee also: `df_unregister`, `df_sql`",
+      "examples": [
+        {
+          "input": "T : df_table([\"x\", \"y\"],\n                    [ndarray([1.0, 2.0, 3.0]), ndarray([10.0, 20.0, 30.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_register(T, \"mydata\");",
+          "output": "done"
+        },
+        {
+          "input": "R : df_sql(\"SELECT * FROM mydata WHERE x > 1\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(R);",
+          "output": "[2, 2]"
+        }
+      ],
+      "see_also": [
+        "df_unregister",
+        "df_sql"
+      ],
+      "section": "DuckDB Integration"
     },
     "df_rename": {
       "type": "Function",
@@ -434,6 +721,59 @@
         "df_table_head"
       ],
       "section": "Table Manipulation"
+    },
+    "df_sql": {
+      "type": "Function",
+      "signature": "df_sql(query)",
+      "summary": "Execute an SQL query via DuckDB and return the result as a df_table. DuckDB can read files directly in SQL. Registered tables (via df_register) are available by name.",
+      "body_md": "Execute an SQL query via DuckDB and return the result as a df_table. DuckDB can read files directly in SQL. Registered tables (via `df_register`) are available by name.\n\n#### Examples\n\n```maxima\n(%i1) T : df_sql(\"SELECT * FROM read_csv('data.csv') WHERE price > 10\")$\n(%i2) df_table_shape(T);\n(%o2)                        [42, 5]\n(%i3) df_register(T, \"sales\")$\n(%i4) R : df_sql(\"SELECT region, sum(price) AS total FROM sales GROUP BY region\")$\n(%i5) df_table_names(R);\n(%o5)                    [region, total]\n```\n\nSee also: `df_sql_run`, `df_register`",
+      "examples": [
+        {
+          "input": "T : df_sql(\"SELECT * FROM read_csv('data.csv') WHERE price > 10\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[42, 5]"
+        },
+        {
+          "input": "df_register(T, \"sales\")$",
+          "output": ""
+        },
+        {
+          "input": "R : df_sql(\"SELECT region, sum(price) AS total FROM sales GROUP BY region\")$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(R);",
+          "output": "[region, total]"
+        }
+      ],
+      "see_also": [
+        "df_sql_run",
+        "df_register"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_sql_run": {
+      "type": "Function",
+      "signature": "df_sql_run(query)",
+      "summary": "Execute a DuckDB SQL statement that produces no result (DDL, INSERT, etc.).",
+      "body_md": "Execute a DuckDB SQL statement that produces no result (DDL, INSERT, etc.).\n\n#### Examples\n\n```maxima\n(%i1) df_sql_run(\"CREATE TABLE temp AS SELECT * FROM read_csv('data.csv')\")$\n(%i2) T : df_sql(\"SELECT * FROM temp WHERE x > 0\")$\n```\n\nSee also: `df_sql`",
+      "examples": [
+        {
+          "input": "df_sql_run(\"CREATE TABLE temp AS SELECT * FROM read_csv('data.csv')\")$",
+          "output": ""
+        },
+        {
+          "input": "T : df_sql(\"SELECT * FROM temp WHERE x > 0\")$",
+          "output": ""
+        }
+      ],
+      "see_also": [
+        "df_sql"
+      ],
+      "section": "DuckDB Integration"
     },
     "df_string_column": {
       "type": "Function",
@@ -825,6 +1165,22 @@
       ],
       "section": "Column Aggregation and Describe"
     },
+    "df_unregister": {
+      "type": "Function",
+      "signature": "df_unregister(name)",
+      "summary": "Remove a previously registered DuckDB table.",
+      "body_md": "Remove a previously registered DuckDB table.\n\n#### Examples\n\n```maxima\n(%i1) df_unregister(\"mydata\");\n(%o1)                         done\n```\n\nSee also: `df_register`",
+      "examples": [
+        {
+          "input": "df_unregister(\"mydata\");",
+          "output": "done"
+        }
+      ],
+      "see_also": [
+        "df_register"
+      ],
+      "section": "DuckDB Integration"
+    },
     "df_value_counts": {
       "type": "Function",
       "signature": "df_value_counts(col)",
@@ -857,6 +1213,44 @@
         "df_unique"
       ],
       "section": "Column Aggregation and Describe"
+    },
+    "df_write_csv": {
+      "type": "Function",
+      "signature": "df_write_csv(T, path)",
+      "summary": "Write a df_table to a CSV file with header row.",
+      "body_md": "Write a df_table to a CSV file with header row.\n\n#### Examples\n\n```maxima\n(%i1) T : df_table([\"name\", \"score\"],\n                    [df_string_column([\"Alice\", \"Bob\"]), ndarray([95.0, 87.0])])$\n(%i2) df_write_csv(T, \"/tmp/output.csv\");\n(%o2)                         done\n```\n\nSee also: `df_read_csv`, `df_write_parquet`",
+      "examples": [
+        {
+          "input": "T : df_table([\"name\", \"score\"],\n                    [df_string_column([\"Alice\", \"Bob\"]), ndarray([95.0, 87.0])])$",
+          "output": ""
+        },
+        {
+          "input": "df_write_csv(T, \"/tmp/output.csv\");",
+          "output": "done"
+        }
+      ],
+      "see_also": [
+        "df_read_csv",
+        "df_write_parquet"
+      ],
+      "section": "DuckDB Integration"
+    },
+    "df_write_parquet": {
+      "type": "Function",
+      "signature": "df_write_parquet(T, path)",
+      "summary": "Write a df_table to a Parquet file.",
+      "body_md": "Write a df_table to a Parquet file.\n\n#### Examples\n\n```maxima\n(%i1) df_write_parquet(T, \"/tmp/output.parquet\");\n(%o1)                         done\n```\n\nSee also: `df_read_parquet`, `df_write_csv`",
+      "examples": [
+        {
+          "input": "df_write_parquet(T, \"/tmp/output.parquet\");",
+          "output": "done"
+        }
+      ],
+      "see_also": [
+        "df_read_parquet",
+        "df_write_csv"
+      ],
+      "section": "DuckDB Integration"
     }
   },
   "sections": [
@@ -891,6 +1285,10 @@
         {
           "title": "Joins and Binds",
           "body_md": "Combine tables by key columns (joins) or by stacking (binds)."
+        },
+        {
+          "title": "DuckDB Integration",
+          "body_md": "The `dataframes-duckdb` extension adds file I/O, SQL queries, and DuckDB-accelerated operations to the dataframes package. It requires `libduckdb` (`brew install duckdb` on macOS).\n\n```maxima\nload(\"dataframes-duckdb\")$\n```\n\n**Type mapping:** DuckDB DOUBLE → ndarray (f64), INTEGER/BIGINT → ndarray (coerced to f64), VARCHAR → string-column, NULL → NaN (numeric) or \"\" (string)."
         }
       ]
     }
