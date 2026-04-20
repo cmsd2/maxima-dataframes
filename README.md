@@ -27,6 +27,22 @@ scores : ndarray([95.0, 87.0, 92.0])$
 T : df_table(["name", "score"], [names, scores]);
 ```
 
+### DuckDB integration (optional)
+
+The `dataframes-duckdb` extension adds CSV/Parquet/JSON I/O, SQL queries, and DuckDB-accelerated operations. It requires `libduckdb`:
+
+```
+brew install duckdb   # macOS
+```
+
+Then load it separately:
+
+```maxima
+load("dataframes-duckdb");
+T : df_read_csv("/path/to/data.csv")$
+df_sql("SELECT * FROM read_csv('data.csv') WHERE price > 10");
+```
+
 ## Documentation
 
 Build documentation artifacts (`.info` and help index):
