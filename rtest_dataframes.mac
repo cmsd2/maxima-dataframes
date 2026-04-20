@@ -1,0 +1,130 @@
+/* Tests for dataframes */
+
+/* load the package */
+(load("dataframes"), true);
+true;
+
+/* === String column creation === */
+
+/* create from list of strings */
+(sc : df_string_column(["a", "b", "c"]), true);
+true;
+
+/* predicate */
+df_string_column_p(sc);
+true;
+
+/* not a string column */
+df_string_column_p(42);
+false;
+
+/* length */
+df_string_column_length(sc);
+3;
+
+/* ref (1-indexed) */
+df_string_column_ref(sc, 1);
+"a";
+
+df_string_column_ref(sc, 3);
+"c";
+
+/* convert back to list */
+df_to_string_list(sc);
+["a", "b", "c"];
+
+/* === Table with numeric columns only === */
+
+(x_arr : ndarray([1.0, 2.0, 3.0]),
+ y_arr : ndarray([4.0, 5.0, 6.0]),
+ T1 : df_table(["x", "y"], [x_arr, y_arr]),
+ true);
+true;
+
+df_table_shape(T1);
+[3, 2];
+
+df_table_names(T1);
+["x", "y"];
+
+/* extract column */
+(col_x : df_table_column(T1, "x"), ndarray_p(col_x));
+true;
+
+/* === Table with mixed columns === */
+
+(name_sc : df_string_column(["x", "y", "z"]),
+ val_arr : ndarray([1.0, 2.0, 3.0]),
+ T2 : df_table(["name", "value"], [name_sc, val_arr]),
+ true);
+true;
+
+df_table_shape(T2);
+[3, 2];
+
+df_table_names(T2);
+["name", "value"];
+
+/* string column extraction */
+(name_col : df_table_column(T2, "name"), df_string_column_p(name_col));
+true;
+
+/* numeric column extraction */
+(val_col : df_table_column(T2, "value"), ndarray_p(val_col));
+true;
+
+/* === Table head === */
+
+(T3 : df_table_head(T2, 2), true);
+true;
+
+df_table_shape(T3);
+[2, 2];
+
+/* head preserves string data */
+(head_names : df_table_column(T3, "name"),
+ df_to_string_list(head_names));
+["x", "y"];
+
+/* === Table to ndarray (numeric columns only) === */
+
+(A : df_table_to_ndarray(T1), true);
+true;
+
+np_shape(A);
+[3, 2];
+
+/* === ndarray to table === */
+
+(T4 : df_ndarray_to_table(np_eye(3), ["a", "b", "c"]), true);
+true;
+
+df_table_shape(T4);
+[3, 3];
+
+df_table_names(T4);
+["a", "b", "c"];
+
+/* === Empty string column === */
+
+(sc0 : df_string_column([]), true);
+true;
+
+df_string_column_length(sc0);
+0;
+
+df_to_string_list(sc0);
+[];
+
+/* === Error cases === */
+
+/* out of bounds ref */
+errcatch(df_string_column_ref(sc, 0));
+[];
+
+errcatch(df_string_column_ref(sc, 4));
+[];
+
+/* column not found */
+errcatch(df_table_column(T1, "nonexistent"));
+[];

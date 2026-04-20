@@ -1,0 +1,614 @@
+This is dataframes.info, produced by makeinfo version 7.3 from
+dataframes.texi.
+
+
+File: dataframes.info,  Node: Top,  Next: Package dataframes,  Up: (dir)
+
+Top
+***
+
+* Menu:
+
+* Package dataframes::
+
+
+File: dataframes.info,  Node: Package dataframes,  Next: Function and variable index,  Prev: Top,  Up: Top
+
+1 Package dataframes
+********************
+
+* Menu:
+
+* Introduction to dataframes::
+* Definitions for dataframes::
+* String Columns::
+
+
+File: dataframes.info,  Node: Introduction to dataframes,  Next: Definitions for dataframes,  Up: Package dataframes
+
+1.1 Introduction to dataframes
+==============================
+
+The ‘dataframes’ package provides pandas-like tabular data for Maxima.
+It extends the ‘numerics’ ndarray ecosystem with string columns and
+mixed-type tables, enabling work with real-world datasets that combine
+numeric and categorical data.
+
+*Requirements:* SBCL (Steel Bank Common Lisp).  The ‘numerics’ package
+is loaded automatically.
+
+* Menu:
+
+* Key concepts::
+* Quick start::
+* String columns::
+* Mixed tables::
+* Converting between tables and ndarrays::
+
+
+File: dataframes.info,  Node: Key concepts,  Next: Quick start,  Up: Introduction to dataframes
+
+1.1.1 Key concepts
+------------------
+
+*string-column* is a 1D column of strings, the text counterpart to
+ndarray.  It uses 1-based indexing (matching Maxima convention) and
+appears as an opaque handle, like ndarray.
+
+*df_table* is a columnar table with named, typed columns.  Each column
+is either an ndarray (for numeric data) or a string-column (for text
+data).  Tables are the primary container for mixed-type tabular data.
+
+
+File: dataframes.info,  Node: Quick start,  Next: String columns,  Prev: Key concepts,  Up: Introduction to dataframes
+
+1.1.2 Quick start
+-----------------
+
+(%i1) load("dataframes")$
+(%i2) names : df_string_column(["Alice", "Bob", "Charlie"]);
+(%o2)      string_column(3) ["Alice", "Bob", "Charlie"]
+(%i3) scores : ndarray([95.0, 87.0, 92.0])$
+(%i4) T : df_table(["name", "score"], [names, scores]);
+(%o4)              df_table: 3 rows x 2 cols
+(%i5) df_table_column(T, "name");
+(%o5)      string_column(3) ["Alice", "Bob", "Charlie"]
+(%i6) df_table_column(T, "score");
+(%o6)            ndarray([3], DOUBLE-FLOAT)
+
+
+File: dataframes.info,  Node: String columns,  Next: Mixed tables,  Prev: Quick start,  Up: Introduction to dataframes
+
+1.1.3 String columns
+--------------------
+
+(%i1) sc : df_string_column(["red", "green", "blue"]);
+(%o1)       string_column(3) ["red", "green", "blue"]
+(%i2) df_string_column_ref(sc, 1);
+(%o2)                          red
+(%i3) df_string_column_length(sc);
+(%o3)                          3
+(%i4) df_to_string_list(sc);
+(%o4)                [red, green, blue]
+
+
+File: dataframes.info,  Node: Mixed tables,  Next: Converting between tables and ndarrays,  Prev: String columns,  Up: Introduction to dataframes
+
+1.1.4 Mixed tables
+------------------
+
+(%i1) regions : df_string_column(["North", "South", "East", "West"])$
+(%i2) revenue : ndarray([100.0, 150.0, 120.0, 180.0])$
+(%i3) T : df_table(["region", "revenue"], [regions, revenue])$
+(%i4) df_table_shape(T);
+(%o4)                        [4, 2]
+(%i5) df_table_names(T);
+(%o5)                [region, revenue]
+(%i6) T2 : df_table_head(T, 2)$
+(%i7) df_table_shape(T2);
+(%o7)                        [2, 2]
+
+
+File: dataframes.info,  Node: Converting between tables and ndarrays,  Prev: Mixed tables,  Up: Introduction to dataframes
+
+1.1.5 Converting between tables and ndarrays
+--------------------------------------------
+
+(%i1) A : np_eye(3)$
+(%i2) T : df_ndarray_to_table(A, ["a", "b", "c"])$
+(%i3) df_table_shape(T);
+(%o3)                        [3, 3]
+(%i4) B : df_table_to_ndarray(T)$
+(%i5) np_shape(B);
+(%o5)                        [3, 3]
+
+
+File: dataframes.info,  Node: Definitions for dataframes,  Next: String Columns,  Prev: Introduction to dataframes,  Up: Package dataframes
+
+1.2 Definitions for dataframes
+==============================
+
+
+File: dataframes.info,  Node: String Columns,  Prev: Definitions for dataframes,  Up: Package dataframes
+
+1.3 String Columns
+==================
+
+A *string-column* is an opaque handle wrapping a 1D column of strings.
+It is the string counterpart to ndarray, designed for categorical
+labels, names, and other non-numeric data.
+
+String-columns use *1-based indexing* (matching Maxima convention).
+
+* Menu:
+
+* Function df_string_column list::
+* Function df_to_string_list col::
+* Function df_string_column_p x::
+* Function df_string_column_ref col i::
+* Function df_string_column_length col::
+* Function df_table names columns::
+* Function df_table_column T name::
+* Function df_table_shape T::
+* Function df_table_names T::
+* Function df_table_head T / df_table_head T n::
+* Function df_table_to_ndarray T::
+* Function df_ndarray_to_table A names::
+* Function df_table_p x::
+
+
+File: dataframes.info,  Node: Function df_string_column list,  Next: Function df_to_string_list col,  Up: String Columns
+
+ -- Function: df_string_column (LIST)
+     Create a string-column from a Maxima list of strings.
+
+     Each element is converted to a string via ‘sconcat’.
+
+* Menu:
+
+     * Examples::
+
+
+File: dataframes.info,  Node: Examples,  Up: String Columns
+
+1.3.1 Examples
+--------------
+
+(%i1) sc : df_string_column(["Alice", "Bob", "Charlie"]);
+(%o1)      string_column(3) ["Alice", "Bob", "Charlie"]
+(%i2) df_string_column_length(sc);
+(%o2)                          3
+(%i3) df_string_column_ref(sc, 1);
+(%o3)                        Alice
+
+See also: ‘df_to_string_list’, ‘df_string_column_p’
+
+* Menu:
+
+* Examples 2::
+* Examples 3::
+* Examples 4::
+* Examples 5::
+* Examples 6::
+* Examples 7::
+* Examples 8::
+* Examples 9::
+* Examples 10::
+* Examples 11::
+* Examples 12::
+* Examples 13::
+
+
+File: dataframes.info,  Node: Function df_to_string_list col,  Next: Function df_string_column_p x,  Prev: Function df_string_column list,  Up: String Columns
+
+ -- Function: df_to_string_list (COL)
+     Convert a string-column back to a Maxima list of strings.
+
+* Menu:
+
+     * Examples: Examples 2.
+
+
+File: dataframes.info,  Node: Examples 2,  Next: Examples 3,  Up: Examples
+
+1.3.1.1 Examples
+................
+
+(%i1) sc : df_string_column(["x", "y", "z"]);
+(%o1)          string_column(3) ["x", "y", "z"]
+(%i2) df_to_string_list(sc);
+(%o2)                      [x, y, z]
+
+See also: ‘df_string_column’
+
+
+File: dataframes.info,  Node: Function df_string_column_p x,  Next: Function df_string_column_ref col i,  Prev: Function df_to_string_list col,  Up: String Columns
+
+ -- Function: df_string_column_p (X)
+     Predicate: return ‘true’ if ‘x’ is a string-column handle, ‘false’
+     otherwise.
+
+* Menu:
+
+     * Examples: Examples 3.
+
+
+File: dataframes.info,  Node: Examples 3,  Next: Examples 4,  Prev: Examples 2,  Up: Examples
+
+1.3.1.2 Examples
+................
+
+(%i1) df_string_column_p(df_string_column(["a", "b"]));
+(%o1)                         true
+(%i2) df_string_column_p(42);
+(%o2)                        false
+(%i3) df_string_column_p(ndarray([1, 2, 3]));
+(%o3)                        false
+
+See also: ‘df_string_column’
+
+
+File: dataframes.info,  Node: Function df_string_column_ref col i,  Next: Function df_string_column_length col,  Prev: Function df_string_column_p x,  Up: String Columns
+
+ -- Function: df_string_column_ref (COL, I)
+     Access element ‘i’ (1-indexed) of a string-column.
+
+     Signals an error if ‘i’ is out of bounds.
+
+* Menu:
+
+     * Examples: Examples 4.
+
+
+File: dataframes.info,  Node: Examples 4,  Next: Examples 5,  Prev: Examples 3,  Up: Examples
+
+1.3.1.3 Examples
+................
+
+(%i1) sc : df_string_column(["red", "green", "blue"]);
+(%o1)       string_column(3) ["red", "green", "blue"]
+(%i2) df_string_column_ref(sc, 1);
+(%o2)                          red
+(%i3) df_string_column_ref(sc, 3);
+(%o3)                         blue
+
+See also: ‘df_string_column_length’, ‘df_to_string_list’
+
+
+File: dataframes.info,  Node: Function df_string_column_length col,  Next: Function df_table names columns,  Prev: Function df_string_column_ref col i,  Up: String Columns
+
+ -- Function: df_string_column_length (COL)
+     Return the number of elements in a string-column.
+
+* Menu:
+
+     * Examples: Examples 5.
+
+
+File: dataframes.info,  Node: Examples 5,  Next: Examples 6,  Prev: Examples 4,  Up: Examples
+
+1.3.1.4 Examples
+................
+
+(%i1) df_string_column_length(df_string_column(["a", "b", "c"]));
+(%o1)                          3
+(%i2) df_string_column_length(df_string_column([]));
+(%o2)                          0
+
+See also: ‘df_string_column_ref’, ‘df_table_shape’ ## Tables
+
+A *df_table* is a columnar table with named, typed columns.  Each column
+is either an ndarray (numeric data) or a string-column (text data).  All
+columns must have the same number of rows.
+
+
+File: dataframes.info,  Node: Function df_table names columns,  Next: Function df_table_column T name,  Prev: Function df_string_column_length col,  Up: String Columns
+
+ -- Function: df_table (NAMES, COLUMNS)
+     Create a table from a list of column names and a list of columns.
+
+     Each column can be an ndarray or a string-column.  The ‘names’
+     argument is a Maxima list of strings.  The ‘columns’ argument is a
+     Maxima list of column handles.
+
+* Menu:
+
+     * Examples: Examples 6.
+
+
+File: dataframes.info,  Node: Examples 6,  Next: Examples 7,  Prev: Examples 5,  Up: Examples
+
+1.3.1.5 Examples
+................
+
+/* Numeric-only table */
+(%i1) x : ndarray([1.0, 2.0, 3.0])$
+(%i2) y : ndarray([4.0, 5.0, 6.0])$
+(%i3) T : df_table(["x", "y"], [x, y]);
+(%o3)              df_table: 3 rows x 2 cols
+
+/* Mixed table with strings and numbers */
+(%i4) names : df_string_column(["Alice", "Bob", "Charlie"])$
+(%i5) scores : ndarray([95.0, 87.0, 92.0])$
+(%i6) T2 : df_table(["name", "score"], [names, scores]);
+(%o6)              df_table: 3 rows x 2 cols
+
+See also: ‘df_table_column’, ‘df_table_shape’, ‘df_table_names’
+
+
+File: dataframes.info,  Node: Function df_table_column T name,  Next: Function df_table_shape T,  Prev: Function df_table names columns,  Up: String Columns
+
+ -- Function: df_table_column (T, NAME)
+     Extract a column by name from a table.
+
+     Returns an ndarray for numeric columns or a string-column for text
+     columns.  Signals an error if the column name is not found.
+
+* Menu:
+
+     * Examples: Examples 7.
+
+
+File: dataframes.info,  Node: Examples 7,  Next: Examples 8,  Prev: Examples 6,  Up: Examples
+
+1.3.1.6 Examples
+................
+
+(%i1) names : df_string_column(["x", "y", "z"])$
+(%i2) vals : ndarray([1.0, 2.0, 3.0])$
+(%i3) T : df_table(["name", "value"], [names, vals])$
+(%i4) df_table_column(T, "name");
+(%o4)          string_column(3) ["x", "y", "z"]
+(%i5) ndarray_p(df_table_column(T, "value"));
+(%o5)                         true
+(%i6) df_string_column_p(df_table_column(T, "name"));
+(%o6)                         true
+
+See also: ‘df_table’, ‘df_table_names’
+
+
+File: dataframes.info,  Node: Function df_table_shape T,  Next: Function df_table_names T,  Prev: Function df_table_column T name,  Up: String Columns
+
+ -- Function: df_table_shape (T)
+     Return the shape of a table as ‘[nrows, ncols]’.
+
+* Menu:
+
+     * Examples: Examples 8.
+
+
+File: dataframes.info,  Node: Examples 8,  Next: Examples 9,  Prev: Examples 7,  Up: Examples
+
+1.3.1.7 Examples
+................
+
+(%i1) x : ndarray([1.0, 2.0, 3.0])$
+(%i2) y : ndarray([4.0, 5.0, 6.0])$
+(%i3) T : df_table(["x", "y"], [x, y])$
+(%i4) df_table_shape(T);
+(%o4)                        [3, 2]
+
+See also: ‘df_table_names’, ‘df_table’
+
+
+File: dataframes.info,  Node: Function df_table_names T,  Next: Function df_table_head T / df_table_head T n,  Prev: Function df_table_shape T,  Up: String Columns
+
+ -- Function: df_table_names (T)
+     Return the column names of a table as a Maxima list of strings.
+
+* Menu:
+
+     * Examples: Examples 9.
+
+
+File: dataframes.info,  Node: Examples 9,  Next: Examples 10,  Prev: Examples 8,  Up: Examples
+
+1.3.1.8 Examples
+................
+
+(%i1) x : ndarray([1.0, 2.0, 3.0])$
+(%i2) y : ndarray([4.0, 5.0, 6.0])$
+(%i3) T : df_table(["x", "y"], [x, y])$
+(%i4) df_table_names(T);
+(%o4)                        [x, y]
+
+See also: ‘df_table_shape’, ‘df_table_column’
+
+
+File: dataframes.info,  Node: Function df_table_head T / df_table_head T n,  Next: Function df_table_to_ndarray T,  Prev: Function df_table_names T,  Up: String Columns
+
+ -- Function: df_table_head (T) / DF_TABLE_HEAD (T, N)
+     Return the first ‘n’ rows of a table as a new table.
+
+     Defaults to 5 rows if ‘n’ is not given.  Works with both numeric
+     and string columns.
+
+* Menu:
+
+     * Examples: Examples 10.
+
+
+File: dataframes.info,  Node: Examples 10,  Next: Examples 11,  Prev: Examples 9,  Up: Examples
+
+1.3.1.9 Examples
+................
+
+(%i1) names : df_string_column(["a", "b", "c", "d", "e"])$
+(%i2) vals : ndarray([1.0, 2.0, 3.0, 4.0, 5.0])$
+(%i3) T : df_table(["name", "value"], [names, vals])$
+(%i4) T2 : df_table_head(T, 2)$
+(%i5) df_table_shape(T2);
+(%o5)                        [2, 2]
+(%i6) df_to_string_list(df_table_column(T2, "name"));
+(%o6)                        [a, b]
+
+See also: ‘df_table’, ‘df_table_shape’
+
+
+File: dataframes.info,  Node: Function df_table_to_ndarray T,  Next: Function df_ndarray_to_table A names,  Prev: Function df_table_head T / df_table_head T n,  Up: String Columns
+
+ -- Function: df_table_to_ndarray (T)
+     Stack all numeric columns of a table into a 2D ndarray.
+
+     String columns are skipped.  Signals an error if the table has no
+     numeric columns.  The result has shape ‘[nrows, num_numeric_cols]’.
+
+* Menu:
+
+     * Examples: Examples 11.
+
+
+File: dataframes.info,  Node: Examples 11,  Next: Examples 12,  Prev: Examples 10,  Up: Examples
+
+1.3.1.10 Examples
+.................
+
+(%i1) x : ndarray([1.0, 2.0])$
+(%i2) y : ndarray([3.0, 4.0])$
+(%i3) T : df_table(["x", "y"], [x, y])$
+(%i4) A : df_table_to_ndarray(T)$
+(%i5) np_shape(A);
+(%o5)                        [2, 2]
+(%i6) np_to_matrix(A);
+(%o6)          matrix([1.0, 3.0], [2.0, 4.0])
+
+See also: ‘df_ndarray_to_table’, ‘df_table’
+
+
+File: dataframes.info,  Node: Function df_ndarray_to_table A names,  Next: Function df_table_p x,  Prev: Function df_table_to_ndarray T,  Up: String Columns
+
+ -- Function: df_ndarray_to_table (A, NAMES)
+     Split a 2D ndarray into named columns, creating a table.
+
+     The ‘names’ argument is a Maxima list of strings, one per column.
+     The number of names must match the number of columns in the
+     ndarray.
+
+* Menu:
+
+     * Examples: Examples 12.
+
+
+File: dataframes.info,  Node: Examples 12,  Next: Examples 13,  Prev: Examples 11,  Up: Examples
+
+1.3.1.11 Examples
+.................
+
+(%i1) A : np_eye(3)$
+(%i2) T : df_ndarray_to_table(A, ["a", "b", "c"])$
+(%i3) df_table_shape(T);
+(%o3)                        [3, 3]
+(%i4) df_table_names(T);
+(%o4)                      [a, b, c]
+(%i5) np_to_list(df_table_column(T, "a"));
+(%o5)                  [1.0, 0.0, 0.0]
+
+See also: ‘df_table_to_ndarray’, ‘df_table’
+
+
+File: dataframes.info,  Node: Function df_table_p x,  Prev: Function df_ndarray_to_table A names,  Up: String Columns
+
+ -- Function: df_table_p (X)
+     Predicate: return ‘true’ if ‘x’ is a table handle, ‘false’
+     otherwise.
+
+* Menu:
+
+     * Examples: Examples 13.
+
+
+File: dataframes.info,  Node: Examples 13,  Prev: Examples 12,  Up: Examples
+
+1.3.1.12 Examples
+.................
+
+(%i1) x : ndarray([1.0, 2.0])$
+(%i2) T : df_table(["x"], [x])$
+(%i3) df_table_p(T);
+(%o3)                         true
+(%i4) df_table_p(42);
+(%o4)                        false
+
+See also: ‘df_table’, ‘df_string_column_p’
+
+
+File: dataframes.info,  Node: Function and variable index,  Prev: Package dataframes,  Up: Top
+
+Appendix A Function and variable index
+**************************************
+
+ [index ]
+* Menu:
+
+* df_ndarray_to_table:                   Function df_ndarray_to_table A names.
+                                                                (line 3)
+* df_string_column:                      Function df_string_column list.
+                                                                (line 3)
+* df_string_column_length:               Function df_string_column_length col.
+                                                                (line 3)
+* df_string_column_p:                    Function df_string_column_p x.
+                                                                (line 3)
+* df_string_column_ref:                  Function df_string_column_ref col i.
+                                                                (line 3)
+* df_table:                              Function df_table names columns.
+                                                                (line 3)
+* df_table_column:                       Function df_table_column T name.
+                                                                (line 3)
+* df_table_head:                         Function df_table_head T / df_table_head T n.
+                                                                (line 3)
+* df_table_names:                        Function df_table_names T.
+                                                                (line 3)
+* df_table_p:                            Function df_table_p x. (line 3)
+* df_table_shape:                        Function df_table_shape T.
+                                                                (line 3)
+* df_table_to_ndarray:                   Function df_table_to_ndarray T.
+                                                                (line 3)
+* df_to_string_list:                     Function df_to_string_list col.
+                                                                (line 3)
+
+
+Tag Table:
+Node: Top81
+Node: Package dataframes199
+Node: Introduction to dataframes443
+Node: Key concepts1098
+Node: Quick start1626
+Node: String columns2243
+Node: Mixed tables2725
+Node: Converting between tables and ndarrays3321
+Node: Definitions for dataframes3761
+Node: String Columns3967
+Node: Function df_string_column list4842
+Node: Examples5155
+Node: Function df_to_string_list col5757
+Node: Examples 26060
+Node: Function df_string_column_p x6368
+Node: Examples 36712
+Node: Function df_string_column_ref col i7116
+Node: Examples 47485
+Node: Function df_string_column_length col7933
+Node: Examples 58247
+Node: Function df_table names columns8825
+Node: Examples 69332
+Node: Function df_table_column T name9975
+Node: Examples 710397
+Node: Function df_table_shape T10972
+Node: Examples 811257
+Node: Function df_table_names T11611
+Node: Examples 911920
+Node: Function df_table_head T / df_table_head T n12282
+Node: Examples 1012712
+Node: Function df_table_to_ndarray T13241
+Node: Examples 1113713
+Node: Function df_ndarray_to_table A names14164
+Node: Examples 1214627
+Node: Function df_table_p x15095
+Node: Examples 1315378
+Node: Function and variable index15724
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

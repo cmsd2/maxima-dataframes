@@ -1,0 +1,17 @@
+/* dataframes — Pandas-like tabular data for Maxima (SBCL only)
+ *
+ * Usage:
+ *   load("dataframes");
+ *   sc : df_string_column(["a", "b", "c"]);
+ *   T : df_table(["name", "val"], [sc, np_array([1, 2, 3])]);
+ */
+
+/* Verify SBCL */
+if not is(build_info()@lisp_name = "SBCL") then
+  error("dataframes requires SBCL; current Lisp is", build_info()@lisp_name)$
+
+/* Ensure numerics is loaded (we need ndarray types) */
+load("numerics")$
+
+/* Load the Lisp bootstrap (Quicklisp + ASDF system) */
+load("dataframes-loader.lisp")$

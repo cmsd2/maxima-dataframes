@@ -1,0 +1,411 @@
+{
+  "version": 1,
+  "package": "dataframes",
+  "source": "./doc/dataframes.md",
+  "symbols": {
+    "df_ndarray_to_table": {
+      "type": "Function",
+      "signature": "df_ndarray_to_table(A, names)",
+      "summary": "Split a 2D ndarray into named columns, creating a table.",
+      "body_md": "Split a 2D ndarray into named columns, creating a table.\n\nThe `names` argument is a Maxima list of strings, one per column. The number of names must match the number of columns in the ndarray.\n\n#### Examples\n\n```maxima\n(%i1) A : np_eye(3)$\n(%i2) T : df_ndarray_to_table(A, [\"a\", \"b\", \"c\"])$\n(%i3) df_table_shape(T);\n(%o3)                        [3, 3]\n(%i4) df_table_names(T);\n(%o4)                      [a, b, c]\n(%i5) np_to_list(df_table_column(T, \"a\"));\n(%o5)                  [1.0, 0.0, 0.0]\n```\n\nSee also: `df_table_to_ndarray`, `df_table`",
+      "examples": [
+        {
+          "input": "A : np_eye(3)$",
+          "output": ""
+        },
+        {
+          "input": "T : df_ndarray_to_table(A, [\"a\", \"b\", \"c\"])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[3, 3]"
+        },
+        {
+          "input": "df_table_names(T);",
+          "output": "[a, b, c]"
+        },
+        {
+          "input": "np_to_list(df_table_column(T, \"a\"));",
+          "output": "[1.0, 0.0, 0.0]"
+        }
+      ],
+      "see_also": [
+        "df_table_to_ndarray",
+        "df_table"
+      ],
+      "section": "Tables"
+    },
+    "df_string_column": {
+      "type": "Function",
+      "signature": "df_string_column(list)",
+      "summary": "Create a string-column from a Maxima list of strings.",
+      "body_md": "Create a string-column from a Maxima list of strings.\n\nEach element is converted to a string via `sconcat`.\n\n#### Examples\n\n```maxima\n(%i1) sc : df_string_column([\"Alice\", \"Bob\", \"Charlie\"]);\n(%o1)      string_column(3) [\"Alice\", \"Bob\", \"Charlie\"]\n(%i2) df_string_column_length(sc);\n(%o2)                          3\n(%i3) df_string_column_ref(sc, 1);\n(%o3)                        Alice\n```\n\nSee also: `df_to_string_list`, `df_string_column_p`",
+      "examples": [
+        {
+          "input": "sc : df_string_column([\"Alice\", \"Bob\", \"Charlie\"]);",
+          "output": "string_column(3) [\"Alice\", \"Bob\", \"Charlie\"]"
+        },
+        {
+          "input": "df_string_column_length(sc);",
+          "output": "3"
+        },
+        {
+          "input": "df_string_column_ref(sc, 1);",
+          "output": "Alice"
+        }
+      ],
+      "see_also": [
+        "df_to_string_list",
+        "df_string_column_p"
+      ],
+      "section": "String Columns"
+    },
+    "df_string_column_length": {
+      "type": "Function",
+      "signature": "df_string_column_length(col)",
+      "summary": "Return the number of elements in a string-column.",
+      "body_md": "Return the number of elements in a string-column.\n\n#### Examples\n\n```maxima\n(%i1) df_string_column_length(df_string_column([\"a\", \"b\", \"c\"]));\n(%o1)                          3\n(%i2) df_string_column_length(df_string_column([]));\n(%o2)                          0\n```\n\nSee also: `df_string_column_ref`, `df_table_shape`",
+      "examples": [
+        {
+          "input": "df_string_column_length(df_string_column([\"a\", \"b\", \"c\"]));",
+          "output": "3"
+        },
+        {
+          "input": "df_string_column_length(df_string_column([]));",
+          "output": "0"
+        }
+      ],
+      "see_also": [
+        "df_string_column_ref",
+        "df_table_shape"
+      ],
+      "section": "String Columns"
+    },
+    "df_string_column_p": {
+      "type": "Function",
+      "signature": "df_string_column_p(x)",
+      "summary": "Predicate: return true if x is a string-column handle, false otherwise.",
+      "body_md": "Predicate: return `true` if `x` is a string-column handle, `false` otherwise.\n\n#### Examples\n\n```maxima\n(%i1) df_string_column_p(df_string_column([\"a\", \"b\"]));\n(%o1)                         true\n(%i2) df_string_column_p(42);\n(%o2)                        false\n(%i3) df_string_column_p(ndarray([1, 2, 3]));\n(%o3)                        false\n```\n\nSee also: `df_string_column`",
+      "examples": [
+        {
+          "input": "df_string_column_p(df_string_column([\"a\", \"b\"]));",
+          "output": "true"
+        },
+        {
+          "input": "df_string_column_p(42);",
+          "output": "false"
+        },
+        {
+          "input": "df_string_column_p(ndarray([1, 2, 3]));",
+          "output": "false"
+        }
+      ],
+      "see_also": [
+        "df_string_column"
+      ],
+      "section": "String Columns"
+    },
+    "df_string_column_ref": {
+      "type": "Function",
+      "signature": "df_string_column_ref(col, i)",
+      "summary": "Access element i (1-indexed) of a string-column.",
+      "body_md": "Access element `i` (1-indexed) of a string-column.\n\nSignals an error if `i` is out of bounds.\n\n#### Examples\n\n```maxima\n(%i1) sc : df_string_column([\"red\", \"green\", \"blue\"]);\n(%o1)       string_column(3) [\"red\", \"green\", \"blue\"]\n(%i2) df_string_column_ref(sc, 1);\n(%o2)                          red\n(%i3) df_string_column_ref(sc, 3);\n(%o3)                         blue\n```\n\nSee also: `df_string_column_length`, `df_to_string_list`",
+      "examples": [
+        {
+          "input": "sc : df_string_column([\"red\", \"green\", \"blue\"]);",
+          "output": "string_column(3) [\"red\", \"green\", \"blue\"]"
+        },
+        {
+          "input": "df_string_column_ref(sc, 1);",
+          "output": "red"
+        },
+        {
+          "input": "df_string_column_ref(sc, 3);",
+          "output": "blue"
+        }
+      ],
+      "see_also": [
+        "df_string_column_length",
+        "df_to_string_list"
+      ],
+      "section": "String Columns"
+    },
+    "df_table": {
+      "type": "Function",
+      "signature": "df_table(names, columns)",
+      "summary": "Create a table from a list of column names and a list of columns.",
+      "body_md": "Create a table from a list of column names and a list of columns.\n\nEach column can be an ndarray or a string-column. The `names` argument is a Maxima list of strings. The `columns` argument is a Maxima list of column handles.\n\n#### Examples\n\n```maxima\n/* Numeric-only table */\n(%i1) x : ndarray([1.0, 2.0, 3.0])$\n(%i2) y : ndarray([4.0, 5.0, 6.0])$\n(%i3) T : df_table([\"x\", \"y\"], [x, y]);\n(%o3)              df_table: 3 rows x 2 cols\n\n/* Mixed table with strings and numbers */\n(%i4) names : df_string_column([\"Alice\", \"Bob\", \"Charlie\"])$\n(%i5) scores : ndarray([95.0, 87.0, 92.0])$\n(%i6) T2 : df_table([\"name\", \"score\"], [names, scores]);\n(%o6)              df_table: 3 rows x 2 cols\n```\n\nSee also: `df_table_column`, `df_table_shape`, `df_table_names`",
+      "examples": [
+        {
+          "input": "x : ndarray([1.0, 2.0, 3.0])$",
+          "output": ""
+        },
+        {
+          "input": "y : ndarray([4.0, 5.0, 6.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"x\", \"y\"], [x, y]);",
+          "output": "df_table: 3 rows x 2 cols\n\n/* Mixed table with strings and numbers */"
+        },
+        {
+          "input": "names : df_string_column([\"Alice\", \"Bob\", \"Charlie\"])$",
+          "output": ""
+        },
+        {
+          "input": "scores : ndarray([95.0, 87.0, 92.0])$",
+          "output": ""
+        },
+        {
+          "input": "T2 : df_table([\"name\", \"score\"], [names, scores]);",
+          "output": "df_table: 3 rows x 2 cols"
+        }
+      ],
+      "see_also": [
+        "df_table_column",
+        "df_table_shape",
+        "df_table_names"
+      ],
+      "section": "Tables"
+    },
+    "df_table_column": {
+      "type": "Function",
+      "signature": "df_table_column(T, name)",
+      "summary": "Extract a column by name from a table.",
+      "body_md": "Extract a column by name from a table.\n\nReturns an ndarray for numeric columns or a string-column for text columns. Signals an error if the column name is not found.\n\n#### Examples\n\n```maxima\n(%i1) names : df_string_column([\"x\", \"y\", \"z\"])$\n(%i2) vals : ndarray([1.0, 2.0, 3.0])$\n(%i3) T : df_table([\"name\", \"value\"], [names, vals])$\n(%i4) df_table_column(T, \"name\");\n(%o4)          string_column(3) [\"x\", \"y\", \"z\"]\n(%i5) ndarray_p(df_table_column(T, \"value\"));\n(%o5)                         true\n(%i6) df_string_column_p(df_table_column(T, \"name\"));\n(%o6)                         true\n```\n\nSee also: `df_table`, `df_table_names`",
+      "examples": [
+        {
+          "input": "names : df_string_column([\"x\", \"y\", \"z\"])$",
+          "output": ""
+        },
+        {
+          "input": "vals : ndarray([1.0, 2.0, 3.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"name\", \"value\"], [names, vals])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_column(T, \"name\");",
+          "output": "string_column(3) [\"x\", \"y\", \"z\"]"
+        },
+        {
+          "input": "ndarray_p(df_table_column(T, \"value\"));",
+          "output": "true"
+        },
+        {
+          "input": "df_string_column_p(df_table_column(T, \"name\"));",
+          "output": "true"
+        }
+      ],
+      "see_also": [
+        "df_table",
+        "df_table_names"
+      ],
+      "section": "Tables"
+    },
+    "df_table_head": {
+      "type": "Function",
+      "signature": "df_table_head(T) / df_table_head (T, n)",
+      "summary": "Return the first n rows of a table as a new table.",
+      "body_md": "Return the first `n` rows of a table as a new table.\n\nDefaults to 5 rows if `n` is not given. Works with both numeric and string columns.\n\n#### Examples\n\n```maxima\n(%i1) names : df_string_column([\"a\", \"b\", \"c\", \"d\", \"e\"])$\n(%i2) vals : ndarray([1.0, 2.0, 3.0, 4.0, 5.0])$\n(%i3) T : df_table([\"name\", \"value\"], [names, vals])$\n(%i4) T2 : df_table_head(T, 2)$\n(%i5) df_table_shape(T2);\n(%o5)                        [2, 2]\n(%i6) df_to_string_list(df_table_column(T2, \"name\"));\n(%o6)                        [a, b]\n```\n\nSee also: `df_table`, `df_table_shape`",
+      "examples": [
+        {
+          "input": "names : df_string_column([\"a\", \"b\", \"c\", \"d\", \"e\"])$",
+          "output": ""
+        },
+        {
+          "input": "vals : ndarray([1.0, 2.0, 3.0, 4.0, 5.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"name\", \"value\"], [names, vals])$",
+          "output": ""
+        },
+        {
+          "input": "T2 : df_table_head(T, 2)$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T2);",
+          "output": "[2, 2]"
+        },
+        {
+          "input": "df_to_string_list(df_table_column(T2, \"name\"));",
+          "output": "[a, b]"
+        }
+      ],
+      "see_also": [
+        "df_table",
+        "df_table_shape"
+      ],
+      "section": "Tables"
+    },
+    "df_table_names": {
+      "type": "Function",
+      "signature": "df_table_names(T)",
+      "summary": "Return the column names of a table as a Maxima list of strings.",
+      "body_md": "Return the column names of a table as a Maxima list of strings.\n\n#### Examples\n\n```maxima\n(%i1) x : ndarray([1.0, 2.0, 3.0])$\n(%i2) y : ndarray([4.0, 5.0, 6.0])$\n(%i3) T : df_table([\"x\", \"y\"], [x, y])$\n(%i4) df_table_names(T);\n(%o4)                        [x, y]\n```\n\nSee also: `df_table_shape`, `df_table_column`",
+      "examples": [
+        {
+          "input": "x : ndarray([1.0, 2.0, 3.0])$",
+          "output": ""
+        },
+        {
+          "input": "y : ndarray([4.0, 5.0, 6.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"x\", \"y\"], [x, y])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_names(T);",
+          "output": "[x, y]"
+        }
+      ],
+      "see_also": [
+        "df_table_shape",
+        "df_table_column"
+      ],
+      "section": "Tables"
+    },
+    "df_table_p": {
+      "type": "Function",
+      "signature": "df_table_p(x)",
+      "summary": "Predicate: return true if x is a table handle, false otherwise.",
+      "body_md": "Predicate: return `true` if `x` is a table handle, `false` otherwise.\n\n#### Examples\n\n```maxima\n(%i1) x : ndarray([1.0, 2.0])$\n(%i2) T : df_table([\"x\"], [x])$\n(%i3) df_table_p(T);\n(%o3)                         true\n(%i4) df_table_p(42);\n(%o4)                        false\n```\n\nSee also: `df_table`, `df_string_column_p`",
+      "examples": [
+        {
+          "input": "x : ndarray([1.0, 2.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"x\"], [x])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_p(T);",
+          "output": "true"
+        },
+        {
+          "input": "df_table_p(42);",
+          "output": "false"
+        }
+      ],
+      "see_also": [
+        "df_table",
+        "df_string_column_p"
+      ],
+      "section": "Tables"
+    },
+    "df_table_shape": {
+      "type": "Function",
+      "signature": "df_table_shape(T)",
+      "summary": "Return the shape of a table as [nrows, ncols].",
+      "body_md": "Return the shape of a table as `[nrows, ncols]`.\n\n#### Examples\n\n```maxima\n(%i1) x : ndarray([1.0, 2.0, 3.0])$\n(%i2) y : ndarray([4.0, 5.0, 6.0])$\n(%i3) T : df_table([\"x\", \"y\"], [x, y])$\n(%i4) df_table_shape(T);\n(%o4)                        [3, 2]\n```\n\nSee also: `df_table_names`, `df_table`",
+      "examples": [
+        {
+          "input": "x : ndarray([1.0, 2.0, 3.0])$",
+          "output": ""
+        },
+        {
+          "input": "y : ndarray([4.0, 5.0, 6.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"x\", \"y\"], [x, y])$",
+          "output": ""
+        },
+        {
+          "input": "df_table_shape(T);",
+          "output": "[3, 2]"
+        }
+      ],
+      "see_also": [
+        "df_table_names",
+        "df_table"
+      ],
+      "section": "Tables"
+    },
+    "df_table_to_ndarray": {
+      "type": "Function",
+      "signature": "df_table_to_ndarray(T)",
+      "summary": "Stack all numeric columns of a table into a 2D ndarray.",
+      "body_md": "Stack all numeric columns of a table into a 2D ndarray.\n\nString columns are skipped. Signals an error if the table has no numeric columns. The result has shape `[nrows, num_numeric_cols]`.\n\n#### Examples\n\n```maxima\n(%i1) x : ndarray([1.0, 2.0])$\n(%i2) y : ndarray([3.0, 4.0])$\n(%i3) T : df_table([\"x\", \"y\"], [x, y])$\n(%i4) A : df_table_to_ndarray(T)$\n(%i5) np_shape(A);\n(%o5)                        [2, 2]\n(%i6) np_to_matrix(A);\n(%o6)          matrix([1.0, 3.0], [2.0, 4.0])\n```\n\nSee also: `df_ndarray_to_table`, `df_table`",
+      "examples": [
+        {
+          "input": "x : ndarray([1.0, 2.0])$",
+          "output": ""
+        },
+        {
+          "input": "y : ndarray([3.0, 4.0])$",
+          "output": ""
+        },
+        {
+          "input": "T : df_table([\"x\", \"y\"], [x, y])$",
+          "output": ""
+        },
+        {
+          "input": "A : df_table_to_ndarray(T)$",
+          "output": ""
+        },
+        {
+          "input": "np_shape(A);",
+          "output": "[2, 2]"
+        },
+        {
+          "input": "np_to_matrix(A);",
+          "output": "matrix([1.0, 3.0], [2.0, 4.0])"
+        }
+      ],
+      "see_also": [
+        "df_ndarray_to_table",
+        "df_table"
+      ],
+      "section": "Tables"
+    },
+    "df_to_string_list": {
+      "type": "Function",
+      "signature": "df_to_string_list(col)",
+      "summary": "Convert a string-column back to a Maxima list of strings.",
+      "body_md": "Convert a string-column back to a Maxima list of strings.\n\n#### Examples\n\n```maxima\n(%i1) sc : df_string_column([\"x\", \"y\", \"z\"]);\n(%o1)          string_column(3) [\"x\", \"y\", \"z\"]\n(%i2) df_to_string_list(sc);\n(%o2)                      [x, y, z]\n```\n\nSee also: `df_string_column`",
+      "examples": [
+        {
+          "input": "sc : df_string_column([\"x\", \"y\", \"z\"]);",
+          "output": "string_column(3) [\"x\", \"y\", \"z\"]"
+        },
+        {
+          "input": "df_to_string_list(sc);",
+          "output": "[x, y, z]"
+        }
+      ],
+      "see_also": [
+        "df_string_column"
+      ],
+      "section": "String Columns"
+    }
+  },
+  "sections": [
+    {
+      "title": "Introduction to dataframes",
+      "body_md": "The `dataframes` package provides pandas-like tabular data for Maxima. It extends the `numerics` ndarray ecosystem with string columns and mixed-type tables, enabling work with real-world datasets that combine numeric and categorical data.\n\n**Requirements:** SBCL (Steel Bank Common Lisp). The `numerics` package is loaded automatically.\n\n### Key concepts\n\n**string-column** is a 1D column of strings, the text counterpart to ndarray. It uses 1-based indexing (matching Maxima convention) and appears as an opaque handle, like ndarray.\n\n**df_table** is a columnar table with named, typed columns. Each column is either an ndarray (for numeric data) or a string-column (for text data). Tables are the primary container for mixed-type tabular data.\n\n### Quick start\n\n```maxima\n(%i1) load(\"dataframes\")$\n(%i2) names : df_string_column([\"Alice\", \"Bob\", \"Charlie\"]);\n(%o2)      string_column(3) [\"Alice\", \"Bob\", \"Charlie\"]\n(%i3) scores : ndarray([95.0, 87.0, 92.0])$\n(%i4) T : df_table([\"name\", \"score\"], [names, scores]);\n(%o4)              df_table: 3 rows x 2 cols\n(%i5) df_table_column(T, \"name\");\n(%o5)      string_column(3) [\"Alice\", \"Bob\", \"Charlie\"]\n(%i6) df_table_column(T, \"score\");\n(%o6)            ndarray([3], DOUBLE-FLOAT)\n```\n\n### String columns\n\n```maxima\n(%i1) sc : df_string_column([\"red\", \"green\", \"blue\"]);\n(%o1)       string_column(3) [\"red\", \"green\", \"blue\"]\n(%i2) df_string_column_ref(sc, 1);\n(%o2)                          red\n(%i3) df_string_column_length(sc);\n(%o3)                          3\n(%i4) df_to_string_list(sc);\n(%o4)                [red, green, blue]\n```\n\n### Mixed tables\n\n```maxima\n(%i1) regions : df_string_column([\"North\", \"South\", \"East\", \"West\"])$\n(%i2) revenue : ndarray([100.0, 150.0, 120.0, 180.0])$\n(%i3) T : df_table([\"region\", \"revenue\"], [regions, revenue])$\n(%i4) df_table_shape(T);\n(%o4)                        [4, 2]\n(%i5) df_table_names(T);\n(%o5)                [region, revenue]\n(%i6) T2 : df_table_head(T, 2)$\n(%i7) df_table_shape(T2);\n(%o7)                        [2, 2]\n```\n\n### Converting between tables and ndarrays\n\n```maxima\n(%i1) A : np_eye(3)$\n(%i2) T : df_ndarray_to_table(A, [\"a\", \"b\", \"c\"])$\n(%i3) df_table_shape(T);\n(%o3)                        [3, 3]\n(%i4) B : df_table_to_ndarray(T)$\n(%i5) np_shape(B);\n(%o5)                        [3, 3]\n```"
+    },
+    {
+      "title": "Definitions for dataframes",
+      "body_md": "",
+      "subsections": [
+        {
+          "title": "String Columns",
+          "body_md": "A **string-column** is an opaque handle wrapping a 1D column of strings. It is the string counterpart to ndarray, designed for categorical labels, names, and other non-numeric data.\n\nString-columns use **1-based indexing** (matching Maxima convention)."
+        },
+        {
+          "title": "Tables",
+          "body_md": "A **df_table** is a columnar table with named, typed columns. Each column is either an ndarray (numeric data) or a string-column (text data). All columns must have the same number of rows."
+        }
+      ]
+    }
+  ]
+}
