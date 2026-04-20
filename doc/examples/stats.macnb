@@ -1,0 +1,1150 @@
+{
+ "nbformat": 4,
+ "nbformat_minor": 5,
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Maxima",
+   "language": "maxima",
+   "name": "maxima"
+  }
+ },
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "source": [
+    "# Descriptive Statistics with Dataframes\n",
+    "\n",
+    "This notebook demonstrates the dataframes package for tabular data analysis\n",
+    "in Maxima — column aggregations, `df_describe`, filtering, grouping,\n",
+    "summarizing, and joins."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "load(\"dataframes\")$"
+   ],
+   "metadata": {
+    "outputLabel": "%o213",
+    "executionCount": 21
+   },
+   "execution_count": 21,
+   "outputs": []
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 1. Building a Dataset\n",
+    "\n",
+    "Create a mixed-type table representing sales data: a categorical column\n",
+    "for region, a string column for product, and numeric columns for price\n",
+    "and quantity."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "regions : df_string_column([\"North\", \"South\", \"North\", \"East\",\n",
+    "                            \"South\", \"East\", \"North\", \"South\",\n",
+    "                            \"East\", \"North\", \"South\", \"East\"])$\n",
+    "products : df_string_column([\"Widget\", \"Widget\", \"Gadget\", \"Widget\",\n",
+    "                             \"Gadget\", \"Gadget\", \"Widget\", \"Widget\",\n",
+    "                             \"Widget\", \"Gadget\", \"Gadget\", \"Widget\"])$\n",
+    "prices : ndarray([12.50, 15.00, 22.00, 14.00,\n",
+    "                  21.50, 23.00, 13.00, 16.00,\n",
+    "                  14.50, 24.00, 20.00, 13.50])$\n",
+    "qty : ndarray([100.0, 80.0, 45.0, 90.0,\n",
+    "               50.0, 40.0, 110.0, 75.0,\n",
+    "               85.0, 35.0, 55.0, 95.0])$\n",
+    "\n",
+    "sales : df_table([\"region\", \"product\", \"price\", \"qty\"],\n",
+    "                 [regions, products, prices, qty])$\n",
+    "sales;"
+   ],
+   "metadata": {
+    "outputLabel": "%o222",
+    "executionCount": 22
+   },
+   "execution_count": 22,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 2. Basic Inspection"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_table_shape(sales);"
+   ],
+   "metadata": {
+    "outputLabel": "%o226",
+    "executionCount": 23
+   },
+   "execution_count": 23,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\left[ 12 , 4 \\right] "
+      ],
+      "text/plain": [
+       "\\left[ 12 , 4 \\right] "
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_table_names(sales);"
+   ],
+   "metadata": {
+    "outputLabel": "%o230",
+    "executionCount": 24
+   },
+   "execution_count": 24,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\left[ \\mbox{ region } , \\mbox{ product } , \\mbox{ price } , \\mbox{ qty }\\right] "
+      ],
+      "text/plain": [
+       "\\left[ \\mbox{ region } , \\mbox{ product } , \\mbox{ price } , \\mbox{ qty }\\right] "
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_table_head(sales, 5);"
+   ],
+   "metadata": {
+    "outputLabel": "%o234",
+    "executionCount": 25
+   },
+   "execution_count": 25,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\hline \\text{5 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\hline \\text{5 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 3. Column-Level Statistics\n",
+    "\n",
+    "Individual column aggregations — the building blocks for summaries."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "price_col : df_table_column(sales, \"price\")$\n",
+    "\n",
+    "print(\"Count:\", df_count(price_col))$\n",
+    "print(\"Mean:\", np_mean(price_col))$\n",
+    "print(\"Median:\", df_median(price_col))$\n",
+    "print(\"Min:\", np_min(price_col))$\n",
+    "print(\"Max:\", np_max(price_col))$\n",
+    "print(\"Std:\", np_std(price_col))$"
+   ],
+   "metadata": {
+    "outputLabel": "%o244",
+    "executionCount": 26
+   },
+   "execution_count": 26,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/plain": [
+       "Count: 12\n",
+       "Mean: 17.416666666666668\n",
+       "Median: 15.5\n",
+       "Min: 12.5\n",
+       "Max: 24.0\n",
+       "Std: 4.1424295072121895"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "### Quantiles"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "print(\"Q25:\", df_quantile(price_col, 0.25))$\n",
+    "print(\"Q50:\", df_quantile(price_col, 0.50))$\n",
+    "print(\"Q75:\", df_quantile(price_col, 0.75))$\n",
+    "print(\"IQR:\", df_quantile(price_col, 0.75) - df_quantile(price_col, 0.25))$"
+   ],
+   "metadata": {
+    "outputLabel": "%o251",
+    "executionCount": 27
+   },
+   "execution_count": 27,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/plain": [
+       "Q25: 13.875\n",
+       "Q50: 15.5\n",
+       "Q75: 21.625\n",
+       "IQR: 7.75"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "### String Column Statistics"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "region_col : df_table_column(sales, \"region\")$\n",
+    "\n",
+    "print(\"Count:\", df_count(region_col))$\n",
+    "print(\"Unique:\", df_nunique(region_col))$\n",
+    "df_unique(region_col);"
+   ],
+   "metadata": {
+    "outputLabel": "%o258",
+    "executionCount": 28
+   },
+   "execution_count": 28,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/plain": [
+       "Count: 12\n",
+       "Unique: 3"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    },
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\left[\\text{North},\\; \\text{South},\\; \\text{East}\\right]"
+      ],
+      "text/plain": [
+       "\\left[\\text{North},\\; \\text{South},\\; \\text{East}\\right]"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "### Value Counts\n",
+    "\n",
+    "Frequency table showing how often each region appears, sorted by count."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_value_counts(region_col);"
+   ],
+   "metadata": {
+    "outputLabel": "%o262",
+    "executionCount": 29
+   },
+   "execution_count": 29,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{ll} \\textbf{value} & \\textbf{count} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     \\\\\\\\ \\text{South} & 4.000     \\\\\\\\ \\text{East} & 4.000     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{2 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{ll} \\textbf{value} & \\textbf{count} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     \\\\\\\\ \\text{South} & 4.000     \\\\\\\\ \\text{East} & 4.000     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{2 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_value_counts(df_table_column(sales, \"product\"));"
+   ],
+   "metadata": {
+    "outputLabel": "%o266",
+    "executionCount": 30
+   },
+   "execution_count": 30,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{ll} \\textbf{value} & \\textbf{count} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     \\\\\\\\ \\text{Gadget} & 5.000     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{2 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{ll} \\textbf{value} & \\textbf{count} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     \\\\\\\\ \\text{Gadget} & 5.000     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{2 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 4. df_describe — Summary Statistics Table\n",
+    "\n",
+    "Produces a table of summary statistics (count, mean, std, min, 25%, 50%,\n",
+    "75%, max) for each numeric column. String columns are skipped."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_describe(sales);"
+   ],
+   "metadata": {
+    "outputLabel": "%o270",
+    "executionCount": 31
+   },
+   "execution_count": 31,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{lll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 12.00     & 12.00     \\\\\\\\ \\text{mean} & 17.42     & 71.67     \\\\\\\\ \\text{std} & 4.327     & 25.61     \\\\\\\\ \\text{min} & 12.50     & 35.00     \\\\\\\\ \\text{25\\%} & 13.88     & 48.75     \\\\\\\\ \\text{50\\%} & 15.50     & 77.50     \\\\\\\\ \\text{75\\%} & 21.63     & 91.25     \\\\\\\\ \\text{max} & 24.00     & 110.0     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{3 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{lll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 12.00     & 12.00     \\\\\\\\ \\text{mean} & 17.42     & 71.67     \\\\\\\\ \\text{std} & 4.327     & 25.61     \\\\\\\\ \\text{min} & 12.50     & 35.00     \\\\\\\\ \\text{25\\%} & 13.88     & 48.75     \\\\\\\\ \\text{50\\%} & 15.50     & 77.50     \\\\\\\\ \\text{75\\%} & 21.63     & 91.25     \\\\\\\\ \\text{max} & 24.00     & 110.0     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{3 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "The result is a regular `df_table` — you can extract specific stats:"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "D : df_describe(sales)$\n",
+    "\n",
+    "/* Extract just the price statistics */\n",
+    "np_to_list(df_table_column(D, \"price\"));"
+   ],
+   "metadata": {
+    "outputLabel": "%o275",
+    "executionCount": 32
+   },
+   "execution_count": 32,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\left[ 12.0 , 17.416666666666668 , 4.326626511463287 , 12.5 , 13.875 , 15.5, 21.625 , 24.0 \\right] "
+      ],
+      "text/plain": [
+       "\\left[ 12.0 , 17.416666666666668 , 4.326626511463287 , 12.5 , 13.875 , 15.5, 21.625 , 24.0 \\right] "
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 5. Filtering Rows\n",
+    "\n",
+    "Lambda parameter names are automatically matched to column names."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* High-value items: price > 20 */\n",
+    "expensive : df_filter(sales, lambda([price], is(price > 20)))$\n",
+    "expensive;"
+   ],
+   "metadata": {
+    "outputLabel": "%o280",
+    "executionCount": 33
+   },
+   "execution_count": 33,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Multi-column filter: North region with large orders */\n",
+    "north_big : df_filter(sales,\n",
+    "              lambda([region, qty], region = \"North\" and is(qty > 50)))$\n",
+    "north_big;"
+   ],
+   "metadata": {
+    "outputLabel": "%o285",
+    "executionCount": 34
+   },
+   "execution_count": 34,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Describe only the filtered subset */\n",
+    "df_describe(expensive);"
+   ],
+   "metadata": {
+    "outputLabel": "%o289",
+    "executionCount": 35
+   },
+   "execution_count": 35,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{lll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 4.000     & 4.000     \\\\\\\\ \\text{mean} & 22.63     & 42.50     \\\\\\\\ \\text{std} & 1.109     & 6.455     \\\\\\\\ \\text{min} & 21.50     & 35.00     \\\\\\\\ \\text{25\\%} & 21.88     & 38.75     \\\\\\\\ \\text{50\\%} & 22.50     & 42.50     \\\\\\\\ \\text{75\\%} & 23.25     & 46.25     \\\\\\\\ \\text{max} & 24.00     & 50.00     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{3 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{lll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 4.000     & 4.000     \\\\\\\\ \\text{mean} & 22.63     & 42.50     \\\\\\\\ \\text{std} & 1.109     & 6.455     \\\\\\\\ \\text{min} & 21.50     & 35.00     \\\\\\\\ \\text{25\\%} & 21.88     & 38.75     \\\\\\\\ \\text{50\\%} & 22.50     & 42.50     \\\\\\\\ \\text{75\\%} & 23.25     & 46.25     \\\\\\\\ \\text{max} & 24.00     & 50.00     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{3 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 6. Sorting"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Sort by price ascending */\n",
+    "df_arrange(sales, \"price\");"
+   ],
+   "metadata": {
+    "outputLabel": "%o293",
+    "executionCount": 36
+   },
+   "execution_count": 36,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Sort by quantity descending — top sellers first */\n",
+    "df_arrange(sales, \"qty\", descending);"
+   ],
+   "metadata": {
+    "outputLabel": "%o297",
+    "executionCount": 37
+   },
+   "execution_count": 37,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 13.00     & 110.0     \\\\\\\\ \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 7. Column Selection and Renaming"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Select just region and price */\n",
+    "df_select(sales, [\"region\", \"price\"]);"
+   ],
+   "metadata": {
+    "outputLabel": "%o301",
+    "executionCount": 38
+   },
+   "execution_count": 38,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{ll} \\textbf{region} & \\textbf{price} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 12.50     \\\\\\\\ \\text{South} & 15.00     \\\\\\\\ \\text{North} & 22.00     \\\\\\\\ \\text{East} & 14.00     \\\\\\\\ \\text{South} & 21.50     \\\\\\\\ \\text{East} & 23.00     \\\\\\\\ \\text{North} & 13.00     \\\\\\\\ \\text{South} & 16.00     \\\\\\\\ \\text{East} & 14.50     \\\\\\\\ \\text{North} & 24.00     \\\\\\\\ \\text{South} & 20.00     \\\\\\\\ \\text{East} & 13.50     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{2 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{ll} \\textbf{region} & \\textbf{price} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 12.50     \\\\\\\\ \\text{South} & 15.00     \\\\\\\\ \\text{North} & 22.00     \\\\\\\\ \\text{East} & 14.00     \\\\\\\\ \\text{South} & 21.50     \\\\\\\\ \\text{East} & 23.00     \\\\\\\\ \\text{North} & 13.00     \\\\\\\\ \\text{South} & 16.00     \\\\\\\\ \\text{East} & 14.50     \\\\\\\\ \\text{North} & 24.00     \\\\\\\\ \\text{South} & 20.00     \\\\\\\\ \\text{East} & 13.50     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{2 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Rename a column */\n",
+    "df_table_names(df_rename(sales, \"qty\", \"quantity\"));"
+   ],
+   "metadata": {
+    "outputLabel": "%o305",
+    "executionCount": 39
+   },
+   "execution_count": 39,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\left[ \\mbox{ region } , \\mbox{ product } , \\mbox{ price } ,\\mbox{ quantity } \\right] "
+      ],
+      "text/plain": [
+       "\\left[ \\mbox{ region } , \\mbox{ product } , \\mbox{ price } ,\\mbox{ quantity } \\right] "
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 8. Adding Computed Columns with df_mutate\n",
+    "\n",
+    "Lambda parameters match column names. The result is a new table with\n",
+    "the additional (or replaced) column."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Add a revenue column: price * qty */\n",
+    "sales2 : df_mutate(sales, \"revenue\", lambda([price, qty], price * qty))$\n",
+    "sales2;"
+   ],
+   "metadata": {
+    "outputLabel": "%o310",
+    "executionCount": 40
+   },
+   "execution_count": 40,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{lllll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} & \\textbf{revenue} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     & 1250.     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     & 1200.     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     & 990.0     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     & 1260.     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     & 1075.     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     & 920.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     & 1430.     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     & 1200.     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     & 1233.     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     & 840.0     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     & 1100.     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     & 1283.     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{5 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{lllll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} & \\textbf{revenue} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     & 1250.     \\\\\\\\ \\text{South} & \\text{Widget} & 15.00     & 80.00     & 1200.     \\\\\\\\ \\text{North} & \\text{Gadget} & 22.00     & 45.00     & 990.0     \\\\\\\\ \\text{East} & \\text{Widget} & 14.00     & 90.00     & 1260.     \\\\\\\\ \\text{South} & \\text{Gadget} & 21.50     & 50.00     & 1075.     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     & 920.0     \\\\\\\\ \\text{North} & \\text{Widget} & 13.00     & 110.0     & 1430.     \\\\\\\\ \\text{South} & \\text{Widget} & 16.00     & 75.00     & 1200.     \\\\\\\\ \\text{East} & \\text{Widget} & 14.50     & 85.00     & 1233.     \\\\\\\\ \\text{North} & \\text{Gadget} & 24.00     & 35.00     & 840.0     \\\\\\\\ \\text{South} & \\text{Gadget} & 20.00     & 55.00     & 1100.     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     & 1283.     \\\\\\\\ \\hline \\text{12 rows} \\times \\text{5 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Describe the extended table — now includes revenue */\n",
+    "df_describe(sales2);"
+   ],
+   "metadata": {
+    "outputLabel": "%o314",
+    "executionCount": 41
+   },
+   "execution_count": 41,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} & \\textbf{revenue} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 12.00     & 12.00     & 12.00     \\\\\\\\ \\text{mean} & 17.42     & 71.67     & 1148.     \\\\\\\\ \\text{std} & 4.327     & 25.61     & 168.6     \\\\\\\\ \\text{min} & 12.50     & 35.00     & 840.0     \\\\\\\\ \\text{25\\%} & 13.88     & 48.75     & 1054.     \\\\\\\\ \\text{50\\%} & 15.50     & 77.50     & 1200.     \\\\\\\\ \\text{75\\%} & 21.63     & 91.25     & 1253.     \\\\\\\\ \\text{max} & 24.00     & 110.0     & 1430.     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{stat} & \\textbf{price} & \\textbf{qty} & \\textbf{revenue} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{count} & 12.00     & 12.00     & 12.00     \\\\\\\\ \\text{mean} & 17.42     & 71.67     & 1148.     \\\\\\\\ \\text{std} & 4.327     & 25.61     & 168.6     \\\\\\\\ \\text{min} & 12.50     & 35.00     & 840.0     \\\\\\\\ \\text{25\\%} & 13.88     & 48.75     & 1054.     \\\\\\\\ \\text{50\\%} & 15.50     & 77.50     & 1200.     \\\\\\\\ \\text{75\\%} & 21.63     & 91.25     & 1253.     \\\\\\\\ \\text{max} & 24.00     & 110.0     & 1430.     \\\\\\\\ \\hline \\text{8 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 9. Summarize — Reducing to Scalars\n",
+    "\n",
+    "Each lambda receives the entire column as an ndarray or string-column handle.\n",
+    "The result is a 1-row summary table."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "df_summarize(sales2,\n",
+    "  \"total_revenue\", lambda([revenue], np_sum(revenue)),\n",
+    "  \"avg_price\",     lambda([price], np_mean(price)),\n",
+    "  \"median_qty\",    lambda([qty], df_median(qty)),\n",
+    "  \"n_orders\",      lambda([price], df_count(price)));"
+   ],
+   "metadata": {
+    "outputLabel": "%o318",
+    "executionCount": 42
+   },
+   "execution_count": 42,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{median\\_qty} & \\textbf{n\\_orders} \\\\\\\\ \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline 1.3780e+4 & 17.42     & 77.50     & 12.00     \\\\\\\\ \\hline \\text{1 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{median\\_qty} & \\textbf{n\\_orders} \\\\\\\\ \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline 1.3780e+4 & 17.42     & 77.50     & 12.00     \\\\\\\\ \\hline \\text{1 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 10. Group By + Summarize\n",
+    "\n",
+    "Group by a categorical column, then summarize per group — the core\n",
+    "split-apply-combine pattern."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Revenue by region */\n",
+    "by_region : df_summarize(\n",
+    "  df_group_by(sales2, \"region\"),\n",
+    "  \"orders\",        lambda([price], df_count(price)),\n",
+    "  \"total_revenue\", lambda([revenue], np_sum(revenue)),\n",
+    "  \"avg_price\",     lambda([price], np_mean(price)))$\n",
+    "by_region;"
+   ],
+   "metadata": {
+    "outputLabel": "%o323",
+    "executionCount": 43
+   },
+   "execution_count": 43,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     & 4510.     & 17.88     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{East} & 4.000     & 4695.     & 16.25     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     & 4510.     & 17.88     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{East} & 4.000     & 4695.     & 16.25     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Revenue by product */\n",
+    "by_product : df_summarize(\n",
+    "  df_group_by(sales2, \"product\"),\n",
+    "  \"orders\",        lambda([price], df_count(price)),\n",
+    "  \"total_revenue\", lambda([revenue], np_sum(revenue)),\n",
+    "  \"avg_price\",     lambda([price], np_mean(price)),\n",
+    "  \"max_qty\",       lambda([qty], np_max(qty)))$\n",
+    "by_product;"
+   ],
+   "metadata": {
+    "outputLabel": "%o328",
+    "executionCount": 44
+   },
+   "execution_count": 44,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{lllll} \\textbf{product} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{max\\_qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     & 8855.     & 14.07     & 110.0     \\\\\\\\ \\text{Gadget} & 5.000     & 4925.     & 22.10     & 55.00     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{5 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{lllll} \\textbf{product} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{max\\_qty} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     & 8855.     & 14.07     & 110.0     \\\\\\\\ \\text{Gadget} & 5.000     & 4925.     & 22.10     & 55.00     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{5 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Sort the regional summary by total revenue, highest first */\n",
+    "df_arrange(by_region, \"total_revenue\", descending);"
+   ],
+   "metadata": {
+    "outputLabel": "%o332",
+    "executionCount": 45
+   },
+   "execution_count": 45,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{East} & 4.000     & 4695.     & 16.25     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{North} & 4.000     & 4510.     & 17.88     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{East} & 4.000     & 4695.     & 16.25     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{North} & 4.000     & 4510.     & 17.88     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 11. Joining Tables\n",
+    "\n",
+    "Combine tables on a shared key column."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Region metadata table */\n",
+    "region_info : df_table(\n",
+    "  [\"region\", \"manager\", \"target\"],\n",
+    "  [df_string_column([\"North\", \"South\", \"East\", \"West\"]),\n",
+    "   df_string_column([\"Alice\", \"Bob\", \"Charlie\", \"Diana\"]),\n",
+    "   ndarray([5000.0, 4000.0, 3500.0, 2000.0])])$\n",
+    "region_info;"
+   ],
+   "metadata": {
+    "outputLabel": "%o337",
+    "executionCount": 46
+   },
+   "execution_count": 46,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{lll} \\textbf{region} & \\textbf{manager} & \\textbf{target} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Alice} & 5000.     \\\\\\\\ \\text{South} & \\text{Bob} & 4000.     \\\\\\\\ \\text{East} & \\text{Charlie} & 3500.     \\\\\\\\ \\text{West} & \\text{Diana} & 2000.     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{3 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{lll} \\textbf{region} & \\textbf{manager} & \\textbf{target} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Alice} & 5000.     \\\\\\\\ \\text{South} & \\text{Bob} & 4000.     \\\\\\\\ \\text{East} & \\text{Charlie} & 3500.     \\\\\\\\ \\text{West} & \\text{Diana} & 2000.     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{3 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Inner join: only regions present in both tables */\n",
+    "df_inner_join(by_region, region_info, \"region\");"
+   ],
+   "metadata": {
+    "outputLabel": "%o341",
+    "executionCount": 47
+   },
+   "execution_count": 47,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llllll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{manager} & \\textbf{target} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     & 4510.     & 17.88     & \\text{Alice} & 5000.     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     & \\text{Bob} & 4000.     \\\\\\\\ \\text{East} & 4.000     & 4695.     & 16.25     & \\text{Charlie} & 3500.     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{6 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llllll} \\textbf{region} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} & \\textbf{manager} & \\textbf{target} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & 4.000     & 4510.     & 17.88     & \\text{Alice} & 5000.     \\\\\\\\ \\text{South} & 4.000     & 4575.     & 18.13     & \\text{Bob} & 4000.     \\\\\\\\ \\text{East} & 4.000     & 4695.     & 16.25     & \\text{Charlie} & 3500.     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{6 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Left join: keep all regions from the summary, fill missing with defaults */\n",
+    "df_left_join(region_info, by_region, \"region\");"
+   ],
+   "metadata": {
+    "outputLabel": "%o345",
+    "executionCount": 48
+   },
+   "execution_count": 48,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llllll} \\textbf{region} & \\textbf{manager} & \\textbf{target} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Alice} & 5000.     & 4.000     & 4510.     & 17.88     \\\\\\\\ \\text{South} & \\text{Bob} & 4000.     & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{East} & \\text{Charlie} & 3500.     & 4.000     & 4695.     & 16.25     \\\\\\\\ \\text{West} & \\text{Diana} & 2000.     & 0.000     & 0.000     & 0.000     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{6 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llllll} \\textbf{region} & \\textbf{manager} & \\textbf{target} & \\textbf{orders} & \\textbf{total\\_revenue} & \\textbf{avg\\_price} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Alice} & 5000.     & 4.000     & 4510.     & 17.88     \\\\\\\\ \\text{South} & \\text{Bob} & 4000.     & 4.000     & 4575.     & 18.13     \\\\\\\\ \\text{East} & \\text{Charlie} & 3500.     & 4.000     & 4695.     & 16.25     \\\\\\\\ \\text{West} & \\text{Diana} & 2000.     & 0.000     & 0.000     & 0.000     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{6 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 12. Stacking Tables"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Stack two batches of sales data vertically */\n",
+    "batch1 : df_table([\"item\", \"amount\"],\n",
+    "                  [df_string_column([\"A\", \"B\"]),\n",
+    "                   ndarray([100.0, 200.0])])$\n",
+    "batch2 : df_table([\"item\", \"amount\"],\n",
+    "                  [df_string_column([\"C\", \"D\"]),\n",
+    "                   ndarray([300.0, 400.0])])$\n",
+    "df_bind_rows(batch1, batch2);"
+   ],
+   "metadata": {
+    "outputLabel": "%o351",
+    "executionCount": 49
+   },
+   "execution_count": 49,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{ll} \\textbf{item} & \\textbf{amount} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{A} & 100.0     \\\\\\\\ \\text{B} & 200.0     \\\\\\\\ \\text{C} & 300.0     \\\\\\\\ \\text{D} & 400.0     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{2 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{ll} \\textbf{item} & \\textbf{amount} \\\\\\\\ \\textit{str} & \\textit{f64} \\\\\\\\ \\hline \\text{A} & 100.0     \\\\\\\\ \\text{B} & 200.0     \\\\\\\\ \\text{C} & 300.0     \\\\\\\\ \\text{D} & 400.0     \\\\\\\\ \\hline \\text{4 rows} \\times \\text{2 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 13. Distinct Values and Slicing"
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Unique region/product combinations */\n",
+    "combos : df_distinct(df_select(sales, [\"region\", \"product\"]))$\n",
+    "combos;"
+   ],
+   "metadata": {
+    "outputLabel": "%o356",
+    "executionCount": 50
+   },
+   "execution_count": 50,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{ll} \\textbf{region} & \\textbf{product} \\\\\\\\ \\textit{str} & \\textit{str} \\\\\\\\ \\hline \\text{North} & \\text{Widget} \\\\\\\\ \\text{South} & \\text{Widget} \\\\\\\\ \\text{North} & \\text{Gadget} \\\\\\\\ \\text{East} & \\text{Widget} \\\\\\\\ \\text{South} & \\text{Gadget} \\\\\\\\ \\text{East} & \\text{Gadget} \\\\\\\\ \\hline \\text{6 rows} \\times \\text{2 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{ll} \\textbf{region} & \\textbf{product} \\\\\\\\ \\textit{str} & \\textit{str} \\\\\\\\ \\hline \\text{North} & \\text{Widget} \\\\\\\\ \\text{South} & \\text{Widget} \\\\\\\\ \\text{North} & \\text{Gadget} \\\\\\\\ \\text{East} & \\text{Widget} \\\\\\\\ \\text{South} & \\text{Gadget} \\\\\\\\ \\text{East} & \\text{Gadget} \\\\\\\\ \\hline \\text{6 rows} \\times \\text{2 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* Slice specific rows (1-indexed) */\n",
+    "df_slice(sales, [1, 6, 12]);"
+   ],
+   "metadata": {
+    "outputLabel": "%o360",
+    "executionCount": 51
+   },
+   "execution_count": 51,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{region} & \\textbf{product} & \\textbf{price} & \\textbf{qty} \\\\\\\\ \\textit{str} & \\textit{str} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{North} & \\text{Widget} & 12.50     & 100.0     \\\\\\\\ \\text{East} & \\text{Gadget} & 23.00     & 40.00     \\\\\\\\ \\text{East} & \\text{Widget} & 13.50     & 95.00     \\\\\\\\ \\hline \\text{3 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 14. Cross-Validation with Maxima's descriptive Package\n",
+    "\n",
+    "Verify our statistics match Maxima's built-in `descriptive` package."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "load(\"descriptive\")$\n",
+    "\n",
+    "price_list : [12.50, 15.00, 22.00, 14.00, 21.50, 23.00,\n",
+    "              13.00, 16.00, 14.50, 24.00, 20.00, 13.50]$\n",
+    "\n",
+    "print(\"df_median vs median:\",\n",
+    "      df_median(price_col), \"=\", median(price_list))$\n",
+    "print(\"df_quantile(0.25) vs quantile:\",\n",
+    "      df_quantile(price_col, 0.25), \"=\", quantile(price_list, 0.25))$\n",
+    "print(\"df_quantile(0.75) vs quantile:\",\n",
+    "      df_quantile(price_col, 0.75), \"=\", quantile(price_list, 0.75))$\n",
+    "print(\"np_mean vs mean:\",\n",
+    "      np_mean(price_col), \"=\", mean(price_list))$"
+   ],
+   "metadata": {
+    "outputLabel": "%o369",
+    "executionCount": 52
+   },
+   "execution_count": 52,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/plain": [
+       "df_median vs median: 15.5 = 15.5\n",
+       "df_quantile(0.25) vs quantile: 13.875 = 13.875\n",
+       "df_quantile(0.75) vs quantile: 21.625 = 21.625\n",
+       "np_mean vs mean: 17.416666666666668 = 17.416666666666668"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## 15. End-to-End Analysis Pipeline\n",
+    "\n",
+    "A realistic workflow: compute revenue, filter to significant orders,\n",
+    "group by product, and summarize."
+   ],
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "/* 1. Compute revenue */\n",
+    "s : df_mutate(sales, \"revenue\", lambda([price, qty], price * qty))$\n",
+    "\n",
+    "/* 2. Filter to orders over $1000 revenue */\n",
+    "s : df_filter(s, lambda([revenue], is(revenue > 1000)))$\n",
+    "\n",
+    "/* 3. Group by product and summarize */\n",
+    "result : df_summarize(\n",
+    "  df_group_by(s, \"product\"),\n",
+    "  \"orders\",  lambda([price], df_count(price)),\n",
+    "  \"revenue\", lambda([revenue], np_sum(revenue)),\n",
+    "  \"avg_rev\", lambda([revenue], np_mean(revenue)))$\n",
+    "\n",
+    "/* 4. Sort by revenue descending */\n",
+    "df_arrange(result, \"revenue\", descending);"
+   ],
+   "metadata": {
+    "outputLabel": "%o376",
+    "executionCount": 53
+   },
+   "execution_count": 53,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/latex": [
+       "\\begin{array}{llll} \\textbf{product} & \\textbf{orders} & \\textbf{revenue} & \\textbf{avg\\_rev} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     & 8855.     & 1265.     \\\\\\\\ \\text{Gadget} & 2.000     & 2175.     & 1088.     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{4 cols} \\end{array}"
+      ],
+      "text/plain": [
+       "\\begin{array}{llll} \\textbf{product} & \\textbf{orders} & \\textbf{revenue} & \\textbf{avg\\_rev} \\\\\\\\ \\textit{str} & \\textit{f64} & \\textit{f64} & \\textit{f64} \\\\\\\\ \\hline \\text{Widget} & 7.000     & 8855.     & 1265.     \\\\\\\\ \\text{Gadget} & 2.000     & 2175.     & 1088.     \\\\\\\\ \\hline \\text{2 rows} \\times \\text{4 cols} \\end{array}"
+      ]
+     },
+     "metadata": {},
+     "execution_count": null
+    }
+   ]
+  }
+ ]
+}

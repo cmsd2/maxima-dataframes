@@ -12,7 +12,16 @@
    ;; Table
    #:table
    #:table-p
+   #:%make-table
    #:make-table
    #:table-column-names
    #:table-columns
-   #:table-nrows))
+   #:table-nrows
+   ;; Grouped table
+   #:grouped-table
+   #:grouped-table-p
+   #:%make-grouped-table
+   #:grouped-table-table
+   #:grouped-table-group-column
+   #:grouped-table-group-keys
+   #:grouped-table-group-indices))

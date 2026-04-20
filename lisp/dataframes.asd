@@ -11,4 +11,7 @@
    (:file "string-column")
    (:file "table")
    (:file "describe")
+   (:file "manipulate")
+   (:file "groupby")
+   (:file "joins")
    (:file "display")))

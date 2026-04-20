@@ -354,3 +354,312 @@ errcatch(df_median(ndarray([])));
 
 errcatch(df_quantile(a8, 1.5));
 [];
+
+/* ================================================================ */
+/* === Phase 2: df_filter, df_select, df_arrange, df_slice, df_rename === */
+/* ================================================================ */
+
+(Tm : df_table(["name", "price"],
+               [df_string_column(["A","B","C","D"]),
+                ndarray([10.0, 30.0, 20.0, 40.0])]),
+ true);
+true;
+
+/* --- df_filter --- */
+
+(Tf : df_filter(Tm, lambda([price], is(price > 15))), true);
+true;
+
+df_table_shape(Tf);
+[3, 2];
+
+/* filtered names should be B, C, D */
+df_to_string_list(df_table_column(Tf, "name"));
+["B", "C", "D"];
+
+/* filter keeps no rows */
+df_table_shape(df_filter(Tm, lambda([price], is(price > 100))));
+[0, 2];
+
+/* filter keeps all rows */
+df_table_shape(df_filter(Tm, lambda([price], is(price > 0))));
+[4, 2];
+
+/* multi-column filter */
+(Tf2 : df_filter(Tm, lambda([name, price], is(price > 15) and name # "D")),
+ df_to_string_list(df_table_column(Tf2, "name")));
+["B", "C"];
+
+/* --- df_select --- */
+
+(Ts : df_select(Tm, ["price"]), true);
+true;
+
+df_table_shape(Ts);
+[4, 1];
+
+df_table_names(Ts);
+["price"];
+
+/* reorder columns */
+df_table_names(df_select(Tm, ["price", "name"]));
+["price", "name"];
+
+/* --- df_arrange --- */
+
+(Ta : df_arrange(Tm, "price"), true);
+true;
+
+df_to_string_list(df_table_column(Ta, "name"));
+["A", "C", "B", "D"];
+
+np_to_list(df_table_column(Ta, "price"));
+[10.0, 20.0, 30.0, 40.0];
+
+/* descending */
+(Tad : df_arrange(Tm, "price", descending), true);
+true;
+
+df_to_string_list(df_table_column(Tad, "name"));
+["D", "B", "C", "A"];
+
+/* arrange by string column */
+(Tas : df_arrange(Tm, "name", descending), true);
+true;
+
+df_to_string_list(df_table_column(Tas, "name"));
+["D", "C", "B", "A"];
+
+/* --- df_slice --- */
+
+(Tsl : df_slice(Tm, [2, 4]), true);
+true;
+
+df_table_shape(Tsl);
+[2, 2];
+
+df_to_string_list(df_table_column(Tsl, "name"));
+["B", "D"];
+
+/* --- df_rename --- */
+
+(Tr : df_rename(Tm, "price", "cost"), true);
+true;
+
+df_table_names(Tr);
+["name", "cost"];
+
+/* ================================================================ */
+/* === Phase 3: df_mutate, df_summarize === */
+/* ================================================================ */
+
+/* --- df_mutate --- */
+
+/* add new column */
+(Tmu : df_mutate(Tm, "double", lambda([price], 2 * price)), true);
+true;
+
+df_table_shape(Tmu);
+[4, 3];
+
+df_table_names(Tmu);
+["name", "price", "double"];
+
+np_to_list(df_table_column(Tmu, "double"));
+[20.0, 60.0, 40.0, 80.0];
+
+/* replace existing column */
+(Tmu2 : df_mutate(Tm, "price", lambda([price], price + 1)), true);
+true;
+
+df_table_names(Tmu2);
+["name", "price"];
+
+np_to_list(df_table_column(Tmu2, "price"));
+[11.0, 31.0, 21.0, 41.0];
+
+/* multi-column mutate */
+(Tm2 : df_table(["x", "y"], [ndarray([1.0, 2.0, 3.0]), ndarray([10.0, 20.0, 30.0])]),
+ Tmu3 : df_mutate(Tm2, "sum", lambda([x, y], x + y)),
+ np_to_list(df_table_column(Tmu3, "sum")));
+[11.0, 22.0, 33.0];
+
+/* --- df_summarize --- */
+
+(Tsu : df_summarize(Tm, "avg", lambda([price], np_mean(price)),
+                         "n",   lambda([price], df_count(price))),
+ true);
+true;
+
+df_table_shape(Tsu);
+[1, 2];
+
+df_table_names(Tsu);
+["avg", "n"];
+
+isclose(first(np_to_list(df_table_column(Tsu, "avg"))), 25.0);
+true;
+
+isclose(first(np_to_list(df_table_column(Tsu, "n"))), 4.0);
+true;
+
+/* ================================================================ */
+/* === Phase 4: df_group_by + grouped summarize === */
+/* ================================================================ */
+
+(Tg : df_table(["region", "product", "revenue"],
+               [df_string_column(["N","S","N","S","N"]),
+                df_string_column(["a","b","c","d","e"]),
+                ndarray([10.0, 20.0, 30.0, 40.0, 50.0])]),
+ true);
+true;
+
+(G : df_group_by(Tg, "region"), true);
+true;
+
+/* grouped summarize */
+(Gs : df_summarize(G, "total", lambda([revenue], np_sum(revenue)),
+                      "avg",   lambda([revenue], np_mean(revenue))),
+ true);
+true;
+
+df_table_shape(Gs);
+[2, 3];
+
+df_table_names(Gs);
+["region", "total", "avg"];
+
+/* N group: 10+30+50=90, avg=30 */
+/* S group: 20+40=60, avg=30 */
+(gs_regions : df_to_string_list(df_table_column(Gs, "region")),
+ gs_totals : np_to_list(df_table_column(Gs, "total")),
+ is(first(gs_regions) = "N"));
+true;
+
+isclose(first(gs_totals), 90.0);
+true;
+
+isclose(second(gs_totals), 60.0);
+true;
+
+/* ================================================================ */
+/* === df_distinct === */
+/* ================================================================ */
+
+(Tdup : df_table(["x", "y"],
+                 [df_string_column(["a","b","a","b","c"]),
+                  ndarray([1.0, 2.0, 1.0, 2.0, 3.0])]),
+ true);
+true;
+
+df_table_shape(df_distinct(Tdup));
+[3, 2];
+
+/* distinct by single column */
+df_table_shape(df_distinct(Tdup, ["x"]));
+[3, 2];
+
+/* ================================================================ */
+/* === Phase 5: joins and binds === */
+/* ================================================================ */
+
+(Tj1 : df_table(["id", "name"],
+                [df_string_column(["1","2","3"]),
+                 df_string_column(["Alice","Bob","Charlie"])]),
+ Tj2 : df_table(["id", "score"],
+                [df_string_column(["1","2","4"]),
+                 ndarray([90.0, 80.0, 70.0])]),
+ true);
+true;
+
+/* --- df_inner_join --- */
+
+(Tij : df_inner_join(Tj1, Tj2, "id"), true);
+true;
+
+df_table_shape(Tij);
+[2, 3];
+
+df_table_names(Tij);
+["id", "name", "score"];
+
+df_to_string_list(df_table_column(Tij, "name"));
+["Alice", "Bob"];
+
+np_to_list(df_table_column(Tij, "score"));
+[90.0, 80.0];
+
+/* --- df_left_join --- */
+
+(Tlj : df_left_join(Tj1, Tj2, "id"), true);
+true;
+
+df_table_shape(Tlj);
+[3, 3];
+
+/* Charlie has no match, score should be 0 (fill value) */
+(lj_scores : np_to_list(df_table_column(Tlj, "score")),
+ isclose(third(lj_scores), 0.0));
+true;
+
+/* --- df_bind_rows --- */
+
+(Tb1 : df_table(["x"], [ndarray([1.0, 2.0])]),
+ Tb2 : df_table(["x"], [ndarray([3.0, 4.0])]),
+ Tbr : df_bind_rows(Tb1, Tb2),
+ true);
+true;
+
+df_table_shape(Tbr);
+[4, 1];
+
+np_to_list(df_table_column(Tbr, "x"));
+[1.0, 2.0, 3.0, 4.0];
+
+/* bind_rows with string columns */
+(Tbs1 : df_table(["name"], [df_string_column(["a","b"])]),
+ Tbs2 : df_table(["name"], [df_string_column(["c","d"])]),
+ Tbsr : df_bind_rows(Tbs1, Tbs2),
+ df_to_string_list(df_table_column(Tbsr, "name")));
+["a", "b", "c", "d"];
+
+/* --- df_bind_cols --- */
+
+(Tbc : df_bind_cols(df_table(["x"], [ndarray([1.0, 2.0])]),
+                     df_table(["y"], [ndarray([3.0, 4.0])])),
+ true);
+true;
+
+df_table_shape(Tbc);
+[2, 2];
+
+df_table_names(Tbc);
+["x", "y"];
+
+/* --- Error cases --- */
+
+/* bind_rows: mismatched names */
+errcatch(df_bind_rows(df_table(["x"], [ndarray([1.0])]),
+                       df_table(["y"], [ndarray([1.0])])));
+[];
+
+/* bind_cols: mismatched row counts */
+errcatch(df_bind_cols(df_table(["x"], [ndarray([1.0, 2.0])]),
+                       df_table(["y"], [ndarray([1.0])])));
+[];
+
+/* bind_cols: duplicate column names */
+errcatch(df_bind_cols(df_table(["x"], [ndarray([1.0])]),
+                       df_table(["x"], [ndarray([1.0])])));
+[];
+
+/* select: column not found */
+errcatch(df_select(Tm, ["nonexistent"]));
+[];
+
+/* slice: out of bounds */
+errcatch(df_slice(Tm, [0]));
+[];
+
+errcatch(df_slice(Tm, [5]));
+[];
