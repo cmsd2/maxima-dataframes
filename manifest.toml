@@ -5,6 +5,7 @@ description = "Pandas-like tabular data for Maxima (SBCL only)"
 license = "MIT"
 entry = "dataframes.mac"
 doc = "doc/dataframes.md"
+repository = "https://github.com/cmsd2/maxima-dataframes"
 
 [lisp]
 quicklisp_systems = ["magicl", "trivial-garbage", "alexandria"]
